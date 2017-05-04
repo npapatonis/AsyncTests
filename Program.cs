@@ -1,4 +1,5 @@
 ﻿using AsyncTests.AsyncEvents;
+using AsyncTests.CancellationHandling;
 
 namespace AsyncTests
 {
@@ -6,8 +7,11 @@ namespace AsyncTests
   {
     static void Main(string[] args)
     {
-      AsyncEventsTest asyncEventsTest = new AsyncEventsTest();
-      asyncEventsTest.Test();
+      //AsyncEventsTest asyncEventsTest = new AsyncEventsTest();
+      //asyncEventsTest.Test();
+
+      CancellationHandlingTest cancellationHandlingTest = new CancellationHandlingTest();
+      cancellationHandlingTest.Test();
     }
   }
 }

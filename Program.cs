@@ -1,4 +1,5 @@
 ﻿using AsyncTests.AsyncEvents;
+using AsyncTests.BackgroundTask;
 using AsyncTests.CancellationHandling;
 
 namespace AsyncTests
@@ -10,8 +11,11 @@ namespace AsyncTests
       //AsyncEventsTest asyncEventsTest = new AsyncEventsTest();
       //asyncEventsTest.Test();
 
-      CancellationHandlingTest cancellationHandlingTest = new CancellationHandlingTest();
-      cancellationHandlingTest.Test();
+      //CancellationHandlingTest cancellationHandlingTest = new CancellationHandlingTest();
+      //cancellationHandlingTest.Test();
+
+      BackgroundTaskTest backgroundTaskTest = new BackgroundTaskTest();
+      backgroundTaskTest.Test();
     }
   }
 }

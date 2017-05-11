@@ -1,20 +1,21 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Tks.G1Track.Mobile.Shared.ConfigurationCache;
 
-namespace Tks.G1Track.Mobile.Shared.ConfigurationCache
+namespace Tks.G1Track.Mobile.Shared.Common
 {
-  public interface IBackgroundTaskRunner
+  public interface IBackgroundTaskHost
   {
     Task StartAsync(IBackgroundTask backgroundTask);
     Task StopAsync();
   }
 
-  public class BackgroundTaskRunner : IBackgroundTaskRunner
+  public class BackgroundTaskHost : IBackgroundTaskHost
   {
     #region =====[ ctor ]==========================================================================================
 
-    public BackgroundTaskRunner(ILogger logger)
+    public BackgroundTaskHost(ILogger logger)
     {
       Logger = logger;
       TaskContext = new BackgroundTaskContext();
@@ -32,25 +33,26 @@ namespace Tks.G1Track.Mobile.Shared.ConfigurationCache
 
     #endregion
 
-    #region =====[ IBackgroundTaskRunner ]=========================================================================
+    #region =====[ IBackgroundTaskHost ]===========================================================================
 
     public Task StartAsync(IBackgroundTask backgroundTask)
     {
       CancellationTokenSource = new CancellationTokenSource();
+      CancellationToken cancellationToken = CancellationTokenSource.Token;
 
       Task = Task.Run(async () =>
       {
+        bool cont = true;
         Logger.Verbose("Task.Run starting");
 
-        while (!CancellationTokenSource.Token.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
           // Let the task run
-          bool cont = true;
           await DoAsyncOperation(async () =>
           {
             Logger.Verbose("Before backgroundTask.Run()");
 
-            cont = await backgroundTask.Run(TaskContext, Logger, CancellationTokenSource.Token);
+            cont = await backgroundTask.Run(TaskContext, Logger, cancellationToken);
 
             TaskContext.LastException = null;
             TaskContext.LastExceptionCount = 0;
@@ -58,25 +60,24 @@ namespace Tks.G1Track.Mobile.Shared.ConfigurationCache
 
             Logger.Verbose("After backgroundTask.Run()");
           });
-          if (!cont) break;
+          if (cancellationToken.IsCancellationRequested || !cont) break;
 
           // Now let it handle any exception that occurred
           if (TaskContext.LastException != null)
           {
             cont = backgroundTask.HandleException(TaskContext, Logger);
           }
-          if (!cont) break;
+          if (cancellationToken.IsCancellationRequested || !cont) break;
 
           // Sleep if necessary before running again
           await DoAsyncOperation(async () =>
           {
             Logger.Verbose("Before sleep");
-            await Task.Delay(backgroundTask.SleepInterval, CancellationTokenSource.Token);
+            await Task.Delay(backgroundTask.SleepInterval, cancellationToken);
             Logger.Verbose("After sleep");
           });
-          Console.WriteLine();
         }
-      }, CancellationTokenSource.Token);
+      }, cancellationToken);
 
       return Task;
     }

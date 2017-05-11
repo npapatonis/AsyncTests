@@ -47,7 +47,7 @@
     <Compile Include="AsyncEvents\AsyncEventsTest.cs" />
     <Compile Include="BackgroundTask\BackgroundTask.cs" />
     <Compile Include="BackgroundTask\BackgroundTaskContext.cs" />
-    <Compile Include="BackgroundTask\BackgroundTaskRunner.cs" />
+    <Compile Include="BackgroundTask\BackgroundTaskHost.cs" />
     <Compile Include="BackgroundTask\BackgroundTaskTest.cs" />
     <Compile Include="BackgroundTask\Extensions.cs" />
     <Compile Include="BackgroundTask\IBackgroundTask.cs" />

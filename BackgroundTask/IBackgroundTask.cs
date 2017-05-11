@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Tks.G1Track.Mobile.Shared.ConfigurationCache
+namespace Tks.G1Track.Mobile.Shared.Common
 {
   public interface IBackgroundTask
   {

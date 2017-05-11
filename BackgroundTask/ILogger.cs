@@ -1,4 +1,4 @@
-﻿namespace Tks.G1Track.Mobile.Shared.ConfigurationCache
+﻿namespace Tks.G1Track.Mobile.Shared.Common
 {
   public interface ILogger
   {

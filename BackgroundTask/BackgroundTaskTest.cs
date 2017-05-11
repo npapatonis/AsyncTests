@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Tks.G1Track.Mobile.Shared.ConfigurationCache;
+using Tks.G1Track.Mobile.Shared.Common;
 
 namespace AsyncTests.BackgroundTask
 {
@@ -13,13 +13,13 @@ namespace AsyncTests.BackgroundTask
 
       Console.WriteLine("BackgroundTaskTest.Test, Press a key to stop...");
 
-      IBackgroundTaskRunner runner = new BackgroundTaskRunner(logger);
-      Task task = runner.StartAsync(backgroundTask);
+      IBackgroundTaskHost host = new BackgroundTaskHost(logger);
+      Task task = host.StartAsync(backgroundTask);
 
       Task.WaitAny(KeyPressed(), task);
 
       Console.WriteLine();
-      runner.StopAsync().Wait();
+      host.StopAsync().Wait();
       task.Wait();
 
       Console.WriteLine("BackgroundTaskTest.Test, Press a key to exit...");

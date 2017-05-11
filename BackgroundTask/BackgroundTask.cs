@@ -28,7 +28,7 @@ namespace AsyncTests.BackgroundTask
 
       logger.Information("Attempting HTTP GET that will timeout");
       var httpClient = new HttpClient();
-      httpClient.Timeout = TimeSpan.FromMilliseconds(10);
+      //httpClient.Timeout = TimeSpan.FromMilliseconds(10);
       var response = await httpClient.GetAsync("http://www.google.com", cancellationToken);
 
       return true;

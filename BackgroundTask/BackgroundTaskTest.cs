@@ -10,6 +10,7 @@ namespace AsyncTests.BackgroundTask
     {
       ILogger logger = new Logger();
       IBackgroundTask backgroundTask = new BackgroundTask();
+      (backgroundTask as BackgroundTask).HttpGetCompleted += HandleHttpGetCompleted;
 
       Console.WriteLine("BackgroundTaskTest.Test, Press a key to stop...");
 
@@ -24,6 +25,21 @@ namespace AsyncTests.BackgroundTask
 
       Console.WriteLine("BackgroundTaskTest.Test, Press a key to exit...");
       KeyPressed().Wait();
+    }
+
+    private void HandleHttpGetCompleted(object sender, HttpGetCompletedEventArgs eventArgs)
+    {
+      Console.WriteLine("Start handling HttpGetCompleted event...");
+
+      var responseMessage = eventArgs.HttpResponseMessage;
+      var content = responseMessage.Content.ReadAsByteArrayAsync().Result;
+
+      Task.Delay(2000, eventArgs.CancellationToken).Wait();
+
+      throw new InvalidOperationException("Invalid operation!!!!");
+
+      Console.WriteLine("Finish handling HttpGetCompleted event...");
+      Console.ReadLine();
     }
 
     private async Task KeyPressed()

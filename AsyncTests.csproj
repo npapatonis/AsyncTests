@@ -54,6 +54,7 @@
     <Compile Include="BackgroundTask\ILogger.cs" />
     <Compile Include="CancellationHandling\CancellationHandling.cs" />
     <Compile Include="CancellationHandling\CancellationHandlingTest.cs" />
+    <Compile Include="EventHub\EventHub.cs" />
     <Compile Include="Parallel\IParallelTask.cs" />
     <Compile Include="Parallel\ParallelTasksHost.cs" />
     <Compile Include="Parallel\ParallelTaskTest.cs" />

@@ -5,17 +5,13 @@ using Tks.G1Track.Mobile.Shared.ConfigurationCache;
 
 namespace Tks.G1Track.Mobile.Shared.Common
 {
-  internal interface IParallelTasksHost<TResult1, TResult2>
-    where TResult1 : ITaskResult
-    where TResult2 : ITaskResult
+  internal interface IParallelTasksHost<TData>
   {
-    Task StartAsync(IParallelTask<TResult1> parallelTask1, IParallelTask<TResult2> parallelTask2);
+    Task StartAsync(IParallelProducer<TData> producer, IParallelConsumer<TData> consumer);
     Task StopAsync();
   }
 
-  internal class ParallelTasksHost<TResult1, TResult2> : IParallelTasksHost<TResult1, TResult2>
-    where TResult1 : ITaskResult
-    where TResult2 : ITaskResult
+  internal class ParallelTasksHost<TData> : IParallelTasksHost<TData>
   {
     #region =====[ ctor ]==========================================================================================
 
@@ -37,34 +33,91 @@ namespace Tks.G1Track.Mobile.Shared.Common
 
     #region =====[ IParallelTasksHost ]============================================================================
 
-    public async Task StartAsync(IParallelTask<TResult1> parallelTask1, IParallelTask<TResult2> parallelTask2)
+    public Task StartAsync(IParallelProducer<TData> producer, IParallelConsumer<TData> consumer)
     {
       CancellationTokenSource = new CancellationTokenSource();
       CancellationToken cancellationToken = CancellationTokenSource.Token;
 
-      bool cont = true;
-      TResult1 taskResult1;
-      TResult2 taskResult2;
-
-      while (!cancellationToken.IsCancellationRequested)
+      Task = Task.Run(async () =>
       {
-        // Let the task run
-        await DoAsyncOperation(async () =>
+        bool producerExit = false;
+
+        var producerTask = producer.Run(Logger, cancellationToken);
+        Task<bool> consumerTask = Task.FromResult(true);
+
+        while (!cancellationToken.IsCancellationRequested)
         {
-          Logger.Verbose("Before backgroundTask.Run()");
-          taskResult1 = await parallelTask1.Run(Logger, cancellationToken);
-          Logger.Verbose("After backgroundTask.Run()");
-        });
-        if (cancellationToken.IsCancellationRequested || !cont) break;
+          // Wait for consumer first since it regulates the overall data flow
+          bool consumerContinue = await DoAsyncOperation(async () =>
+          {
+            Logger.Verbose("Before awaiting consumer task");
+            var result = await consumerTask;
+            Logger.Verbose("After awaiting consumer task");
+            return result;
+          }).ConfigureAwait(false);
+          if (cancellationToken.IsCancellationRequested) break;
 
-        //// Now let it handle any exception that occurred
-        //if (TaskContext.LastException != null)
-        //{
-        //  cont = backgroundTask.HandleException(TaskContext, Logger);
-        //}
-        //if (cancellationToken.IsCancellationRequested || !cont) break;
-      }
+          // Did the producer signal end of data during the last iteration?
+          Logger.Verbose($"Testing producerExit flag: {producerExit}");
+          if (producerExit) break;
 
+          // If consumer does not want more data, cancel before awaiting producer
+          Logger.Verbose($"Testing consumerContinue flag: {consumerContinue}");
+          if (!consumerContinue) CancellationTokenSource.Cancel();
+
+          // Wait for producer
+          var producerResult = await DoAsyncOperation(async () =>
+          {
+            Logger.Verbose("Before awaiting producer task");
+            var result = await producerTask;
+            Logger.Verbose("After awaiting producer task");
+            return result;
+          }).ConfigureAwait(false);
+          if (cancellationToken.IsCancellationRequested) break;
+
+          // If producer has more data, run it again
+          Logger.Verbose($"Testing producerResult.Continue flag: {producerResult.Continue}");
+          if (producerResult.Continue)
+          {
+            Logger.Verbose("Run producer task again");
+            producerTask = producer.Run(Logger, cancellationToken);
+          }
+          else
+          {
+            // If producer is out of data, set an exit flag and create
+            // fake producer task so consumer can run one more time
+            Logger.Verbose("Prepare for producer exit");
+            producerExit = true;
+            producerTask = Task.FromResult(default(ProducerResult<TData>));
+          }
+          // Run consumer
+          Logger.Verbose("Run consumer task again");
+          consumerTask = consumer.Run(producerResult.Data, Logger, cancellationToken);
+
+
+          //// Let the tasks run
+          //await DoAsyncOperation(async () => await Task.WhenAny(producerTask, consumerTask)).ConfigureAwait(false);
+          //if (cancellationToken.IsCancellationRequested) break;
+
+          //// If consumer is done, wait for producer
+          //if (consumerTask.IsCompleted)
+          //{
+          //  // If consumer does not want more data, cancel producer
+          //  if (!consumerTask.Result) CancellationTokenSource.Cancel();
+          //  await DoAsyncOperation(async () => await producerTask).ConfigureAwait(false);
+          //}
+          //if (cancellationToken.IsCancellationRequested) break;
+
+          //// If producer is done, wait for consumer
+          //if (producerTask.IsCompleted)
+          //{
+          //  cont = producerTask.Result.Continue;
+          //  await DoAsyncOperation(async () => await consumerTask).ConfigureAwait(false);
+          //}
+        }
+      }, cancellationToken);
+
+      return Task;
     }
 
     public async Task StopAsync()
@@ -84,9 +137,18 @@ namespace Tks.G1Track.Mobile.Shared.Common
 
     private async Task DoAsyncOperation(Func<Task> operation)
     {
+      await DoAsyncOperation<int>(async () =>
+      {
+        await operation().ConfigureAwait(false);
+        return 0;
+      }).ConfigureAwait(false);
+    }
+
+    private async Task<TReturn> DoAsyncOperation<TReturn>(Func<Task<TReturn>> operation)
+    {
       try
       {
-        await operation();
+        return await operation().ConfigureAwait(false);
       }
       catch (OperationCanceledException operationCanceledException)
       {
@@ -126,6 +188,8 @@ namespace Tks.G1Track.Mobile.Shared.Common
         HandleException(exception, true);
         Logger.Verbose("After log Exception");
       }
+
+      return default(TReturn);
     }
 
     private void HandleException(Exception exception, bool isError)

@@ -60,13 +60,18 @@ namespace AsyncTests.BackgroundTask
 
   internal class Logger : ILogger
   {
+    private object m_lock = new object();
+
     private void LogMessage(string prefix, ConsoleColor prefixColor, string message)
     {
-      var currentColor = Console.ForegroundColor;
-      Console.ForegroundColor = prefixColor;
-      Console.Write(prefix);
-      Console.ForegroundColor = currentColor;
-      Console.WriteLine($" {message}");
+      lock (m_lock)
+      {
+        var currentColor = Console.ForegroundColor;
+        Console.ForegroundColor = prefixColor;
+        Console.Write(prefix);
+        Console.ForegroundColor = currentColor;
+        Console.WriteLine($" {message}");
+      }
     }
 
     public void Error(string message)

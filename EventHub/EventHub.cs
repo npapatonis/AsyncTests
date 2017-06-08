@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace AsyncTests.EventHub
 {
-  class EventHub
+  public class EventHub
   {
+
   }
 }

@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AsyncTests</RootNamespace>
     <AssemblyName>AsyncTests</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -55,11 +56,13 @@
     <Compile Include="CancellationHandling\CancellationHandling.cs" />
     <Compile Include="CancellationHandling\CancellationHandlingTest.cs" />
     <Compile Include="EventHub\EventHub.cs" />
-    <Compile Include="Parallel\IParallelTask.cs" />
+    <Compile Include="Parallel\IParallelConsumer.cs" />
+    <Compile Include="Parallel\IParallelProducer.cs" />
     <Compile Include="Parallel\ParallelTasksHost.cs" />
     <Compile Include="Parallel\ParallelTaskTest.cs" />
-    <Compile Include="Parallel\ProdTaskResult.cs" />
-    <Compile Include="Parallel\TaskResult.cs" />
+    <Compile Include="Parallel\ProducerResult.cs" />
+    <Compile Include="Parallel\TestConsumer.cs" />
+    <Compile Include="Parallel\TestProducer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -1,24 +1,21 @@
 ﻿namespace Tks.G1Track.Mobile.Shared.Common
 {
-  internal interface ITaskResult
-  {
-    bool Continue { get; }
-  }
-
-  internal class TaskResult : ITaskResult
+  public class ProducerResult<TData>
   {
     #region =====[ ctor ]==========================================================================================
 
-    internal TaskResult(bool cont)
+    internal ProducerResult(bool cont, TData data)
     {
       Continue = cont;
+      Data = data;
     }
 
     #endregion
 
-    #region =====[ ITaskResult ]===================================================================================
+    #region =====[ IProdTaskResult ]===============================================================================
 
     public bool Continue { get; private set; }
+    public TData Data { get; private set; }
 
     #endregion
   }

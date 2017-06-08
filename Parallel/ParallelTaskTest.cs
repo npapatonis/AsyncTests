@@ -12,7 +12,7 @@ namespace AsyncTests.Parallel
     {
       ILogger logger = new Logger();
       IParallelProducer<List<int>> producer = new TestProducer();
-      IParallelConsumer<List<int>> consumer = new TestConsumer();
+      IParallelConsumer<List<int>> consumer = new TestConsumer(52);
 
       logger.Information("ParallelTaskTest.Test, Press a key to stop...");
 

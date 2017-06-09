@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ApplyFilter\ApplyFilterTest.cs" />
     <Compile Include="AsyncEvents\AsyncEvents.cs" />
     <Compile Include="AsyncEvents\AsyncEventsTest.cs" />
     <Compile Include="BackgroundTask\BackgroundTask.cs" />
@@ -52,9 +53,10 @@
     <Compile Include="BackgroundTask\BackgroundTaskTest.cs" />
     <Compile Include="BackgroundTask\Extensions.cs" />
     <Compile Include="BackgroundTask\IBackgroundTask.cs" />
-    <Compile Include="BackgroundTask\ILogger.cs" />
+    <Compile Include="Common\ILogger.cs" />
     <Compile Include="CancellationHandling\CancellationHandling.cs" />
     <Compile Include="CancellationHandling\CancellationHandlingTest.cs" />
+    <Compile Include="Common\Logger.cs" />
     <Compile Include="EventHub\EventHub.cs" />
     <Compile Include="Parallel\IParallelConsumer.cs" />
     <Compile Include="Parallel\IParallelProducer.cs" />

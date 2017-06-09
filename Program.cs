@@ -1,7 +1,4 @@
-﻿using AsyncTests.AsyncEvents;
-using AsyncTests.BackgroundTask;
-using AsyncTests.CancellationHandling;
-using AsyncTests.Parallel;
+﻿using AsyncTests.ApplyFilter;
 
 namespace AsyncTests
 {
@@ -18,8 +15,11 @@ namespace AsyncTests
       //BackgroundTaskTest backgroundTaskTest = new BackgroundTaskTest();
       //backgroundTaskTest.Test();
 
-      ParallelTaskTest parallelTaskTest = new ParallelTaskTest();
-      parallelTaskTest.Test();
+      //ParallelTaskTest parallelTaskTest = new ParallelTaskTest();
+      //parallelTaskTest.Test();
+
+      ApplyFilterTest applyFilterTest = new ApplyFilterTest();
+      applyFilterTest.Test();
     }
   }
 }

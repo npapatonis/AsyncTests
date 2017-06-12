@@ -4,17 +4,17 @@ using System.Threading.Tasks;
 
 namespace Tks.G1Track.Mobile.Shared.Common
 {
-  internal interface IParallelTasksHost<TData>
+  internal interface IParallelPipeline<TData>
   {
     Task StartAsync(IParallelProducer<TData> producer, IParallelConsumer<TData> consumer);
     Task StopAsync();
   }
 
-  internal class ParallelTasksHost<TData> : IParallelTasksHost<TData>
+  internal class ParallelPipeline<TData> : IParallelPipeline<TData>
   {
     #region =====[ ctor ]==========================================================================================
 
-    public ParallelTasksHost(ILogger logger)
+    public ParallelPipeline(ILogger logger)
     {
       Logger = logger;
     }
@@ -92,27 +92,6 @@ namespace Tks.G1Track.Mobile.Shared.Common
           // Run consumer
           Logger.Verbose("Run consumer task again");
           consumerTask = consumer.Run(producerResult.Data, Logger, cancellationToken);
-
-
-          //// Let the tasks run
-          //await DoAsyncOperation(async () => await Task.WhenAny(producerTask, consumerTask)).ConfigureAwait(false);
-          //if (cancellationToken.IsCancellationRequested) break;
-
-          //// If consumer is done, wait for producer
-          //if (consumerTask.IsCompleted)
-          //{
-          //  // If consumer does not want more data, cancel producer
-          //  if (!consumerTask.Result) CancellationTokenSource.Cancel();
-          //  await DoAsyncOperation(async () => await producerTask).ConfigureAwait(false);
-          //}
-          //if (cancellationToken.IsCancellationRequested) break;
-
-          //// If producer is done, wait for consumer
-          //if (producerTask.IsCompleted)
-          //{
-          //  cont = producerTask.Result.Continue;
-          //  await DoAsyncOperation(async () => await consumerTask).ConfigureAwait(false);
-          //}
         }
       }, cancellationToken);
 

@@ -62,7 +62,7 @@
     <Compile Include="MiscTests\LockvsSemaphoreTest.cs" />
     <Compile Include="Parallel\IParallelConsumer.cs" />
     <Compile Include="Parallel\IParallelProducer.cs" />
-    <Compile Include="Parallel\ParallelTasksHost.cs" />
+    <Compile Include="Parallel\ParallelPipeline.cs" />
     <Compile Include="Parallel\ParallelTaskTest.cs" />
     <Compile Include="Parallel\ProducerResult.cs" />
     <Compile Include="Parallel\TestConsumer.cs" />

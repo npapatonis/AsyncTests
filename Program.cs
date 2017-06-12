@@ -1,4 +1,5 @@
 ﻿using AsyncTests.ApplyFilter;
+using AsyncTests.BackgroundTask;
 using AsyncTests.MiscTests;
 
 namespace AsyncTests
@@ -13,8 +14,8 @@ namespace AsyncTests
       //CancellationHandlingTest cancellationHandlingTest = new CancellationHandlingTest();
       //cancellationHandlingTest.Test();
 
-      //BackgroundTaskTest backgroundTaskTest = new BackgroundTaskTest();
-      //backgroundTaskTest.Test();
+      BackgroundTaskTest backgroundTaskTest = new BackgroundTaskTest();
+      backgroundTaskTest.Test();
 
       //ParallelTaskTest parallelTaskTest = new ParallelTaskTest();
       //parallelTaskTest.Test();
@@ -22,8 +23,8 @@ namespace AsyncTests
       //ApplyFilterTest applyFilterTest = new ApplyFilterTest();
       //applyFilterTest.Test();
 
-      LockvsSemaphoreTest lockvsSemaphoreTest = new LockvsSemaphoreTest();
-      lockvsSemaphoreTest.Test(false).Wait();
+      //LockvsSemaphoreTest lockvsSemaphoreTest = new LockvsSemaphoreTest();
+      //lockvsSemaphoreTest.Test(false).Wait();
     }
   }
 }

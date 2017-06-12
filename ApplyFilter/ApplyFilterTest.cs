@@ -8,10 +8,10 @@ namespace AsyncTests.ApplyFilter
   internal class ApplyFilterTest
   {
     private ILogger Logger = new Logger();
-    private string SearchFilter;
+    private string SearchFilter = "";
 
     private object ApplyFilterSignalMutex = new object();
-    private TaskCompletionSource<int> ApplyFilterSignal = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+    private TaskCompletionSource<object> ApplyFilterSignal;
 
     private Task BackgroundFilterTask = null;
 
@@ -19,13 +19,20 @@ namespace AsyncTests.ApplyFilter
     {
       CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-      ApplyFilterSignal = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
       RunBackgroundFilter(cancellationTokenSource.Token);
 
-      ApplyFilter("N");
+      while (true)
+      {
+        ConsoleKeyInfo? consoleKeyInfo = KeyPressed(CancellationToken.None).Result;
+        if (consoleKeyInfo.Value.Key == ConsoleKey.Escape) break;
+        SearchFilter += consoleKeyInfo.Value.KeyChar;
+        ApplyFilter(SearchFilter);
+      }
 
       cancellationTokenSource.Cancel();
-      BackgroundFilterTask.Wait();
+      try { BackgroundFilterTask.Wait(); }
+      catch (AggregateException) { }
+      catch (TaskCanceledException) { }
 
       Console.ReadLine();
     }
@@ -38,168 +45,131 @@ namespace AsyncTests.ApplyFilter
       lock (ApplyFilterSignalMutex)
       {
         Logger.Information($"ApplyFilter('{searchFilter}') - Before signal TrySetResult");
-        ApplyFilterSignal.TrySetResult(0);
+        ApplyFilterSignal.TrySetResult(null);
         Logger.Information($"ApplyFilter('{searchFilter}') - After signal TrySetResult");
       }
     }
 
     public void RunBackgroundFilter(CancellationToken cancellationToken)
     {
+      ApplyFilterSignal = CreateApplyFilterSignal();
+
       BackgroundFilterTask = Task.Run(async () =>
       {
-        Logger.Information($"RunBackgroundFilter - Start");
-
-        while (!cancellationToken.IsCancellationRequested)
+        try
         {
-          Logger.Information($"RunBackgroundFilter - Awaiting {nameof(ApplyFilterSignal)}");
-          await ApplyFilterSignal.Task.ConfigureAwait(false);
+          Logger.Information($"RunBackgroundFilter - Start");
 
-          while (true)
+          while (!cancellationToken.IsCancellationRequested)
           {
-            var searchFilter = SearchFilter;
-            Logger.Information($"RunBackgroundFilter('{searchFilter}') - Copied SearchFilter");
+            Logger.Information($"RunBackgroundFilter - Awaiting {nameof(ApplyFilterSignal)}");
+            await ApplyFilterSignal.Task.WithCancellation(Logger, cancellationToken).ConfigureAwait(false);
 
-            if (string.IsNullOrWhiteSpace(searchFilter))
+            while (true)
             {
-              Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/o filter) Assign List");
-              //FilteredInmates = Inmates;
-              break;
-            }
-            else
-            {
-              Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) Before filter query");
-              await Task.Delay(1000);
+              var searchFilter = SearchFilter;
+              Logger.Information($"RunBackgroundFilter('{searchFilter}') - Copied SearchFilter");
 
-              //var tempList = Inmates.Where(inmate =>
-              //                    inmate.InmateDisplayNameUpper.Contains(searchFilter) ||
-              //                    inmate.BedNameUpper.Contains(searchFilter) ||
-              //                    inmate.PermanentNumberUpper.Contains(searchFilter) ||
-              //                    inmate.BookingNumberUpper.Contains(searchFilter)
-              //                    );
-              Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) After filter query");
-
-              Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) Cancellation Requested: {cancellationToken.IsCancellationRequested}");
-              if (cancellationToken.IsCancellationRequested) break;
-
-              if (searchFilter == SearchFilter)
+              if (string.IsNullOrWhiteSpace(searchFilter))
               {
-                Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) Filter unchanged, assign List");
-                //FilteredInmates = new MvxObservableCollection<InmateViewModel>(tempList);
+                Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/o filter) Assign List");
+                //FilteredInmates = Inmates;
                 break;
               }
               else
               {
-                Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) Filter changed, start again");
+                Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) Before filter query");
+                await Task.Delay(75, cancellationToken);
+
+                //var tempList = Inmates.Where(inmate =>
+                //                    inmate.InmateDisplayNameUpper.Contains(searchFilter) ||
+                //                    inmate.BedNameUpper.Contains(searchFilter) ||
+                //                    inmate.PermanentNumberUpper.Contains(searchFilter) ||
+                //                    inmate.BookingNumberUpper.Contains(searchFilter)
+                //                    );
+                Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) After filter query");
+
+                Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) Cancellation Requested: {cancellationToken.IsCancellationRequested}");
+                if (cancellationToken.IsCancellationRequested) break;
+
+                if (searchFilter == SearchFilter)
+                {
+                  // !!TODO!! Small timing window here.  If a user presses a key after this comparison and before the
+                  // signal is recreated, the signal will be lost.
+                  Logger.Information($"RunBackgroundFilter - Recreating ApplyFilterSignal");
+                  ApplyFilterSignal = CreateApplyFilterSignal();
+
+                  Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) Filter unchanged, assign List");
+                  //FilteredInmates = new MvxObservableCollection<InmateViewModel>(tempList);
+                  break;
+                }
+                else
+                {
+                  Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) Filter changed, do over");
+                }
               }
             }
           }
-
-          Logger.Information($"ApplyFilter - Getting mutex lock");
-          lock (ApplyFilterSignalMutex)
-          {
-            Logger.Information($"ApplyFilter - Recreating ApplyFilterSignal");
-            ApplyFilterSignal = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-          }
+          Logger.Information($"RunBackgroundFilter - Exit");
         }
-        Logger.Information($"RunBackgroundFilter - Exit");
+        catch (Exception exception)
+        {
+          Logger.Information($"RunBackgroundFilter - Caugth exception {exception.Message}");
+          throw;
+        }
       }, cancellationToken);
     }
 
-    //public async Task ApplySearchFilterAsync(string searchFilter)
-    //{
-    //  await Task.Run(async () =>
-    //  {
-    //    Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Start");
-
-    //    Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - {nameof(currentApplyFilterTask)} != null: {currentApplyFilterTask != null}");
-    //    if (currentApplyFilterTask != null)
-    //    {
-    //      Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Before semaphore wait");
-    //      Task semaphoreTask = semaphore.WaitAsync();
-    //      Task task = await Task.WhenAny(semaphoreTask, tcs.Task);
-
-
-    //      Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - After semaphore wait");
-
-    //      Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - {nameof(currentApplyFilterTask)} != null: {currentApplyFilterTask != null}");
-    //      if (currentApplyFilterTask != null)
-    //      {
-    //        Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Cancel token");
-    //        tokenSource?.Cancel();
-
-    //        Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Before await {nameof(currentApplyFilterTask)}");
-    //        await currentApplyFilterTask;
-    //        Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - After await {nameof(currentApplyFilterTask)}");
-
-    //        Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Set {nameof(currentApplyFilterTask)} = null");
-    //        currentApplyFilterTask = null;
-
-    //        Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Create new cancellation token source");
-    //        tokenSource = new CancellationTokenSource();
-    //      }
-
-    //      Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Release semaphore");
-    //      semaphore.Release();
-    //    }
-
-    //    Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Call ApplyFilterAsync");
-    //    currentApplyFilterTask = ApplyFilterAsync(SearchFilter.ToUpperInvariant(), tokenSource.Token);
-
-    //    Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Before await {nameof(currentApplyFilterTask)}");
-    //    await currentApplyFilterTask;
-    //    Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - After await {nameof(currentApplyFilterTask)}");
-
-    //    Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Set {nameof(currentApplyFilterTask)} = null");
-    //    currentApplyFilterTask = null;
-
-    //    Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Exit");
-    //  });
-    //}
-
-    public Task ApplyFilterAsync(string searchFilter, CancellationToken token)
+    private TaskCompletionSource<object> CreateApplyFilterSignal()
     {
-      Task task;
-
-      Logger.Information($"ApplyFilterAsync('{searchFilter}') - Start");
-
-      if (string.IsNullOrWhiteSpace(searchFilter))
+      lock (ApplyFilterSignalMutex)
       {
-        Logger.Information($"ApplyFilterAsync('{searchFilter}') - (w/o filter) Assign List");
-        //FilteredInmates = Inmates;
-        task = Task.CompletedTask;
+        Logger.Information($"CreateApplyFilterSignal - Recreating ApplyFilterSignal");
+        return new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
       }
-      else
+    }
+
+    private async Task<ConsoleKeyInfo?> KeyPressed(CancellationToken cancellationToken)
+    {
+      await Task.Yield();
+
+      ConsoleKeyInfo? consoleKeyInfo = null;
+
+      while (!cancellationToken.IsCancellationRequested)
       {
-        task = Task.Run(async () =>
+        if (Console.KeyAvailable)
         {
-          Logger.Information($"ApplyFilterAsync('{searchFilter}') - (w/ filter) Start");
-
-          if (token.IsCancellationRequested) return;
-
-          Logger.Information($"ApplyFilterAsync('{searchFilter}') - (w/ filter) Before filter query");
-          await Task.Delay(1000);
-
-          //var tempList = Inmates.Where(inmate =>
-          //                    inmate.InmateDisplayNameUpper.Contains(searchFilter) ||
-          //                    inmate.BedNameUpper.Contains(searchFilter) ||
-          //                    inmate.PermanentNumberUpper.Contains(searchFilter) ||
-          //                    inmate.BookingNumberUpper.Contains(searchFilter)
-          //                    );
-          Logger.Information($"ApplyFilterAsync('{searchFilter}') - (w/ filter) After filter query");
-
-          Logger.Information($"ApplyFilterAsync('{searchFilter}') - (w/ filter) Cancellation Requested: {token.IsCancellationRequested}");
-          if (token.IsCancellationRequested) return;
-
-          Logger.Information($"ApplyFilterAsync('{searchFilter}') - (w/ filter) Assign List");
-          //FilteredInmates = new MvxObservableCollection<InmateViewModel>(tempList);
-
-          Logger.Information($"ApplyFilterAsync('{searchFilter}') - (w/ filter) Exit");
-        },
-        token);
+          consoleKeyInfo = Console.ReadKey(true);
+          break;
+        }
+        await Task.Delay(125, cancellationToken);
       }
 
-      Logger.Information($"ApplyFilterAsync('{searchFilter}') - Exit");
-      return task;
+      return consoleKeyInfo;
+    }
+  }
+
+  internal static class TaskExtensions
+  {
+    public static async Task<T> WithCancellation<T>(this Task<T> task, ILogger logger, CancellationToken cancellationToken)
+    {
+      var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+      //using (cancellationToken.Register(s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs)) { }
+      logger.Information($"WithCancellation - Register signal cancellation delegate");
+      using (cancellationToken.Register(s =>
+      {
+        logger.Information($"WithCancellation - Cancelling ApplyFilterSignal");
+        ((TaskCompletionSource<object>)s).TrySetCanceled(cancellationToken);
+      }, tcs))
+      {
+        logger.Information($"WithCancellation - Before Task.WhenAny");
+        if (task != await Task.WhenAny(task, tcs.Task).ConfigureAwait(false))
+          throw new OperationCanceledException(cancellationToken);
+        logger.Information($"WithCancellation - After Task.WhenAny");
+
+        return await task.ConfigureAwait(false);
+      }
     }
   }
 }

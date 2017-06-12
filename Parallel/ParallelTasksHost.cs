@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Tks.G1Track.Mobile.Shared.ConfigurationCache;
 
 namespace Tks.G1Track.Mobile.Shared.Common
 {

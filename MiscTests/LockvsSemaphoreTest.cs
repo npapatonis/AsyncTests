@@ -33,7 +33,7 @@ namespace AsyncTests.MiscTests
         sw.Restart();
         for (int n = 0; n < maxIterations; n++)
         {
-          await semaphoreMutex.WaitAsync();
+          await semaphoreMutex.WaitAsync().ConfigureAwait(false);
           var x = 1;
           semaphoreMutex.Release();
         }

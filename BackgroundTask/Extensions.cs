@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
-namespace Tks.G1Track.Mobile.Shared.ConfigurationCache
+namespace Tks.G1Track.Mobile.Shared.Common
 {
   public static class Extensions
   {

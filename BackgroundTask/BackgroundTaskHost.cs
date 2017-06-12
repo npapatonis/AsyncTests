@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Tks.G1Track.Mobile.Shared.ConfigurationCache;
 
 namespace Tks.G1Track.Mobile.Shared.Common
 {
@@ -52,14 +51,14 @@ namespace Tks.G1Track.Mobile.Shared.Common
           {
             Logger.Verbose("Before backgroundTask.Run()");
 
-            cont = await backgroundTask.Run(TaskContext, Logger, cancellationToken);
+            cont = await backgroundTask.Run(TaskContext, Logger, cancellationToken).ConfigureAwait(false);
 
             TaskContext.LastException = null;
             TaskContext.LastExceptionCount = 0;
             TaskContext.ExceptionCount = 0;
 
             Logger.Verbose("After backgroundTask.Run()");
-          });
+          }).ConfigureAwait(false);
           if (cancellationToken.IsCancellationRequested || !cont) break;
 
           // Now let it handle any exception that occurred
@@ -73,9 +72,9 @@ namespace Tks.G1Track.Mobile.Shared.Common
           await DoAsyncOperation(async () =>
           {
             Logger.Verbose("Before sleep");
-            await Task.Delay(backgroundTask.SleepInterval, cancellationToken);
+            await Task.Delay(backgroundTask.SleepInterval, cancellationToken).ConfigureAwait(false);
             Logger.Verbose("After sleep");
-          });
+          }).ConfigureAwait(false);
         }
       }, cancellationToken);
 
@@ -88,7 +87,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
       CancellationTokenSource.Cancel();
       Logger.Verbose("After CancellationTokenSource.Cancel()");
       Logger.Verbose("Before awaiting Task");
-      await Task;
+      await Task.ConfigureAwait(false);
       Logger.Verbose("After awaiting Task");
     }
 
@@ -100,7 +99,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
     {
       try
       {
-        await operation();
+        await operation().ConfigureAwait(false);
       }
       catch (OperationCanceledException operationCanceledException)
       {

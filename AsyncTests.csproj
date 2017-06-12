@@ -58,6 +58,7 @@
     <Compile Include="CancellationHandling\CancellationHandlingTest.cs" />
     <Compile Include="Common\Logger.cs" />
     <Compile Include="EventHub\EventHub.cs" />
+    <Compile Include="MiscTests\LockvsSemaphoreTest.cs" />
     <Compile Include="Parallel\IParallelConsumer.cs" />
     <Compile Include="Parallel\IParallelProducer.cs" />
     <Compile Include="Parallel\ParallelTasksHost.cs" />

@@ -10,73 +10,151 @@ namespace AsyncTests.ApplyFilter
     private ILogger Logger = new Logger();
     private string SearchFilter;
 
-    private Task currentApplyFilterTask = null;
-    private CancellationTokenSource tokenSource = new CancellationTokenSource();
+    private object ApplyFilterSignalMutex = new object();
+    private TaskCompletionSource<int> ApplyFilterSignal = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-    private SemaphoreSlim semaphore = new SemaphoreSlim(1);
-
+    private Task BackgroundFilterTask = null;
 
     internal void Test()
     {
-      CancellationTokenSource cts = new CancellationTokenSource();
+      CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-      ApplySearchFilterAsync("N").Wait();
+      ApplyFilterSignal = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+      RunBackgroundFilter(cancellationTokenSource.Token);
+
+      ApplyFilter("N");
+
+      cancellationTokenSource.Cancel();
+      BackgroundFilterTask.Wait();
 
       Console.ReadLine();
     }
 
-    TaskCompletionSource<int> tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-    public async Task ApplySearchFilterAsync(string searchFilter)
+    public void ApplyFilter(string searchFilter)
     {
-      await Task.Run(async () =>
+      Logger.Information($"ApplyFilter('{searchFilter}') - Start");
+
+      Logger.Information($"ApplyFilter('{searchFilter}') - Getting mutex lock");
+      lock (ApplyFilterSignalMutex)
       {
-        Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Start");
+        Logger.Information($"ApplyFilter('{searchFilter}') - Before signal TrySetResult");
+        ApplyFilterSignal.TrySetResult(0);
+        Logger.Information($"ApplyFilter('{searchFilter}') - After signal TrySetResult");
+      }
+    }
 
-        Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - {nameof(currentApplyFilterTask)} != null: {currentApplyFilterTask != null}");
-        if (currentApplyFilterTask != null)
+    public void RunBackgroundFilter(CancellationToken cancellationToken)
+    {
+      BackgroundFilterTask = Task.Run(async () =>
+      {
+        Logger.Information($"RunBackgroundFilter - Start");
+
+        while (!cancellationToken.IsCancellationRequested)
         {
-          Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Before semaphore wait");
-          Task semaphoreTask = semaphore.WaitAsync();
-          Task task = await Task.WhenAny(semaphoreTask, tcs.Task);
+          Logger.Information($"RunBackgroundFilter - Awaiting {nameof(ApplyFilterSignal)}");
+          await ApplyFilterSignal.Task.ConfigureAwait(false);
 
-
-          Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - After semaphore wait");
-
-          Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - {nameof(currentApplyFilterTask)} != null: {currentApplyFilterTask != null}");
-          if (currentApplyFilterTask != null)
+          while (true)
           {
-            Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Cancel token");
-            tokenSource?.Cancel();
+            var searchFilter = SearchFilter;
+            Logger.Information($"RunBackgroundFilter('{searchFilter}') - Copied SearchFilter");
 
-            Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Before await {nameof(currentApplyFilterTask)}");
-            await currentApplyFilterTask;
-            Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - After await {nameof(currentApplyFilterTask)}");
+            if (string.IsNullOrWhiteSpace(searchFilter))
+            {
+              Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/o filter) Assign List");
+              //FilteredInmates = Inmates;
+              break;
+            }
+            else
+            {
+              Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) Before filter query");
+              await Task.Delay(1000);
 
-            Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Set {nameof(currentApplyFilterTask)} = null");
-            currentApplyFilterTask = null;
+              //var tempList = Inmates.Where(inmate =>
+              //                    inmate.InmateDisplayNameUpper.Contains(searchFilter) ||
+              //                    inmate.BedNameUpper.Contains(searchFilter) ||
+              //                    inmate.PermanentNumberUpper.Contains(searchFilter) ||
+              //                    inmate.BookingNumberUpper.Contains(searchFilter)
+              //                    );
+              Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) After filter query");
 
-            Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Create new cancellation token source");
-            tokenSource = new CancellationTokenSource();
+              Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) Cancellation Requested: {cancellationToken.IsCancellationRequested}");
+              if (cancellationToken.IsCancellationRequested) break;
+
+              if (searchFilter == SearchFilter)
+              {
+                Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) Filter unchanged, assign List");
+                //FilteredInmates = new MvxObservableCollection<InmateViewModel>(tempList);
+                break;
+              }
+              else
+              {
+                Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) Filter changed, start again");
+              }
+            }
           }
 
-          Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Release semaphore");
-          semaphore.Release();
+          Logger.Information($"ApplyFilter - Getting mutex lock");
+          lock (ApplyFilterSignalMutex)
+          {
+            Logger.Information($"ApplyFilter - Recreating ApplyFilterSignal");
+            ApplyFilterSignal = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+          }
         }
-
-        Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Call ApplyFilterAsync");
-        currentApplyFilterTask = ApplyFilterAsync(SearchFilter.ToUpperInvariant(), tokenSource.Token);
-
-        Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Before await {nameof(currentApplyFilterTask)}");
-        await currentApplyFilterTask;
-        Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - After await {nameof(currentApplyFilterTask)}");
-
-        Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Set {nameof(currentApplyFilterTask)} = null");
-        currentApplyFilterTask = null;
-
-        Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Exit");
-      });
+        Logger.Information($"RunBackgroundFilter - Exit");
+      }, cancellationToken);
     }
+
+    //public async Task ApplySearchFilterAsync(string searchFilter)
+    //{
+    //  await Task.Run(async () =>
+    //  {
+    //    Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Start");
+
+    //    Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - {nameof(currentApplyFilterTask)} != null: {currentApplyFilterTask != null}");
+    //    if (currentApplyFilterTask != null)
+    //    {
+    //      Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Before semaphore wait");
+    //      Task semaphoreTask = semaphore.WaitAsync();
+    //      Task task = await Task.WhenAny(semaphoreTask, tcs.Task);
+
+
+    //      Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - After semaphore wait");
+
+    //      Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - {nameof(currentApplyFilterTask)} != null: {currentApplyFilterTask != null}");
+    //      if (currentApplyFilterTask != null)
+    //      {
+    //        Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Cancel token");
+    //        tokenSource?.Cancel();
+
+    //        Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Before await {nameof(currentApplyFilterTask)}");
+    //        await currentApplyFilterTask;
+    //        Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - After await {nameof(currentApplyFilterTask)}");
+
+    //        Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Set {nameof(currentApplyFilterTask)} = null");
+    //        currentApplyFilterTask = null;
+
+    //        Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Create new cancellation token source");
+    //        tokenSource = new CancellationTokenSource();
+    //      }
+
+    //      Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Release semaphore");
+    //      semaphore.Release();
+    //    }
+
+    //    Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Call ApplyFilterAsync");
+    //    currentApplyFilterTask = ApplyFilterAsync(SearchFilter.ToUpperInvariant(), tokenSource.Token);
+
+    //    Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Before await {nameof(currentApplyFilterTask)}");
+    //    await currentApplyFilterTask;
+    //    Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - After await {nameof(currentApplyFilterTask)}");
+
+    //    Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Set {nameof(currentApplyFilterTask)} = null");
+    //    currentApplyFilterTask = null;
+
+    //    Logger.Information($"ApplySearchFilterAsync('{searchFilter}') - Exit");
+    //  });
+    //}
 
     public Task ApplyFilterAsync(string searchFilter, CancellationToken token)
     {

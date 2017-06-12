@@ -1,4 +1,5 @@
 ﻿using AsyncTests.ApplyFilter;
+using AsyncTests.MiscTests;
 
 namespace AsyncTests
 {
@@ -18,8 +19,11 @@ namespace AsyncTests
       //ParallelTaskTest parallelTaskTest = new ParallelTaskTest();
       //parallelTaskTest.Test();
 
-      ApplyFilterTest applyFilterTest = new ApplyFilterTest();
-      applyFilterTest.Test();
+      //ApplyFilterTest applyFilterTest = new ApplyFilterTest();
+      //applyFilterTest.Test();
+
+      LockvsSemaphoreTest lockvsSemaphoreTest = new LockvsSemaphoreTest();
+      lockvsSemaphoreTest.Test(true).Wait();
     }
   }
 }

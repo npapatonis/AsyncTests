@@ -10,14 +10,14 @@ namespace AsyncTests.ApplyFilter
     private ILogger Logger = new Logger();
     private string SearchFilter = "";
 
-    private object ApplyFilterSignalMutex = new object();
-    private TaskCompletionSource<object> ApplyFilterSignal;
+    private ApplyFilterSignal ApplyFilterSignal;
 
     private Task BackgroundFilterTask = null;
 
     internal void Test()
     {
       CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+      ApplyFilterSignal = new ApplyFilterSignal(Logger);
 
       RunBackgroundFilter(cancellationTokenSource.Token);
 
@@ -39,21 +39,12 @@ namespace AsyncTests.ApplyFilter
 
     public void ApplyFilter(string searchFilter)
     {
-      Logger.Information($"ApplyFilter('{searchFilter}') - Start");
-
-      Logger.Information($"ApplyFilter('{searchFilter}') - Getting mutex lock");
-      lock (ApplyFilterSignalMutex)
-      {
-        Logger.Information($"ApplyFilter('{searchFilter}') - Before signal TrySetResult");
-        ApplyFilterSignal.TrySetResult(null);
-        Logger.Information($"ApplyFilter('{searchFilter}') - After signal TrySetResult");
-      }
+      Logger.Information($"ApplyFilter('{searchFilter}') - Setting ApplyFilterSignal");
+      ApplyFilterSignal.Set();
     }
 
     public void RunBackgroundFilter(CancellationToken cancellationToken)
     {
-      ApplyFilterSignal = CreateApplyFilterSignal();
-
       BackgroundFilterTask = Task.Run(async () =>
       {
         try
@@ -63,7 +54,7 @@ namespace AsyncTests.ApplyFilter
           while (!cancellationToken.IsCancellationRequested)
           {
             Logger.Information($"RunBackgroundFilter - Awaiting {nameof(ApplyFilterSignal)}");
-            await ApplyFilterSignal.Task.WithCancellation(Logger, cancellationToken).ConfigureAwait(false);
+            await ApplyFilterSignal.WaitAsync(cancellationToken).ConfigureAwait(false);
 
             while (true)
             {
@@ -79,7 +70,7 @@ namespace AsyncTests.ApplyFilter
               else
               {
                 Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) Before filter query");
-                await Task.Delay(75, cancellationToken);
+                await Task.Delay(250, cancellationToken);
 
                 //var tempList = Inmates.Where(inmate =>
                 //                    inmate.InmateDisplayNameUpper.Contains(searchFilter) ||
@@ -96,8 +87,8 @@ namespace AsyncTests.ApplyFilter
                 {
                   // !!TODO!! Small timing window here.  If a user presses a key after this comparison and before the
                   // signal is recreated, the signal will be lost.
-                  Logger.Information($"RunBackgroundFilter - Recreating ApplyFilterSignal");
-                  ApplyFilterSignal = CreateApplyFilterSignal();
+                  Logger.Information($"RunBackgroundFilter - Clearing ApplyFilterSignal");
+                  ApplyFilterSignal.Clear();
 
                   Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) Filter unchanged, assign List");
                   //FilteredInmates = new MvxObservableCollection<InmateViewModel>(tempList);
@@ -120,15 +111,6 @@ namespace AsyncTests.ApplyFilter
       }, cancellationToken);
     }
 
-    private TaskCompletionSource<object> CreateApplyFilterSignal()
-    {
-      lock (ApplyFilterSignalMutex)
-      {
-        Logger.Information($"CreateApplyFilterSignal - Recreating ApplyFilterSignal");
-        return new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-      }
-    }
-
     private async Task<ConsoleKeyInfo?> KeyPressed(CancellationToken cancellationToken)
     {
       await Task.Yield();
@@ -146,30 +128,6 @@ namespace AsyncTests.ApplyFilter
       }
 
       return consoleKeyInfo;
-    }
-  }
-
-  internal static class TaskExtensions
-  {
-    public static async Task<T> WithCancellation<T>(this Task<T> task, ILogger logger, CancellationToken cancellationToken)
-    {
-      var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-      //using (cancellationToken.Register(s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs)) { }
-      logger.Information($"WithCancellation - Register signal cancellation delegate");
-      using (cancellationToken.Register(s =>
-      {
-        logger.Information($"WithCancellation - Cancelling ApplyFilterSignal");
-        ((TaskCompletionSource<object>)s).TrySetCanceled(cancellationToken);
-      }, tcs))
-      {
-        logger.Information($"WithCancellation - Before Task.WhenAny");
-        if (task != await Task.WhenAny(task, tcs.Task).ConfigureAwait(false))
-          throw new OperationCanceledException(cancellationToken);
-        logger.Information($"WithCancellation - After Task.WhenAny");
-
-        return await task.ConfigureAwait(false);
-      }
     }
   }
 }

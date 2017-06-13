@@ -1,6 +1,7 @@
 ﻿using AsyncTests.ApplyFilter;
 using AsyncTests.BackgroundTask;
 using AsyncTests.MiscTests;
+using AsyncTests.PeriodicTask;
 
 namespace AsyncTests
 {
@@ -14,8 +15,11 @@ namespace AsyncTests
       //CancellationHandlingTest cancellationHandlingTest = new CancellationHandlingTest();
       //cancellationHandlingTest.Test();
 
-      BackgroundTaskTest backgroundTaskTest = new BackgroundTaskTest();
-      backgroundTaskTest.Test();
+      //BackgroundTaskTest backgroundTaskTest = new BackgroundTaskTest();
+      //backgroundTaskTest.Test();
+
+      PeriodicTaskTest periodicTaskTest = new PeriodicTaskTest();
+      periodicTaskTest.Test();
 
       //ParallelTaskTest parallelTaskTest = new ParallelTaskTest();
       //parallelTaskTest.Test();

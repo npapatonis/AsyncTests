@@ -52,12 +52,14 @@
     <Compile Include="BackgroundTask\BackgroundTaskContext.cs" />
     <Compile Include="BackgroundTask\BackgroundTaskHost.cs" />
     <Compile Include="BackgroundTask\BackgroundTaskTest.cs" />
-    <Compile Include="BackgroundTask\Extensions.cs" />
+    <Compile Include="Common\DirectedTaskContext.cs" />
+    <Compile Include="Common\Extensions.cs" />
     <Compile Include="BackgroundTask\IBackgroundTask.cs" />
     <Compile Include="Common\ILogger.cs" />
     <Compile Include="CancellationHandling\CancellationHandling.cs" />
     <Compile Include="CancellationHandling\CancellationHandlingTest.cs" />
     <Compile Include="Common\Logger.cs" />
+    <Compile Include="Common\TaskDirectorBase.cs" />
     <Compile Include="EventHub\EventHub.cs" />
     <Compile Include="MiscTests\LockvsSemaphoreTest.cs" />
     <Compile Include="Parallel\IParallelConsumer.cs" />
@@ -68,6 +70,10 @@
     <Compile Include="Parallel\TaskRunnerBase.cs" />
     <Compile Include="Parallel\TestConsumer.cs" />
     <Compile Include="Parallel\TestProducer.cs" />
+    <Compile Include="PeriodicTask\IPeriodicTask.cs" />
+    <Compile Include="PeriodicTask\PeriodicTask.cs" />
+    <Compile Include="PeriodicTask\PeriodicTaskDirector.cs" />
+    <Compile Include="PeriodicTask\PeriodicTaskTest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

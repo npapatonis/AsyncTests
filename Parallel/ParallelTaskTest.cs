@@ -16,7 +16,7 @@ namespace AsyncTests.Parallel
 
       logger.Information("ParallelTaskTest.Test, Press a key to stop...");
 
-      IParallelTasksHost<List<int>> host = new ParallelTasksHost<List<int>>(logger);
+      IParallelPipeline<List<int>> host = new ParallelPipeline<List<int>>(logger);
       Task task = host.StartAsync(producer, consumer);
 
       Task.WaitAny(KeyPressed(), task);

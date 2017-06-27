@@ -66,7 +66,7 @@
     <Compile Include="Parallel\IParallelProducer.cs" />
     <Compile Include="Parallel\ParallelPipeline.cs" />
     <Compile Include="Parallel\ParallelTaskTest.cs" />
-    <Compile Include="Parallel\ProducerResult.cs" />
+    <Compile Include="SyncronizedTask\ProducerResult.cs" />
     <Compile Include="Parallel\TaskRunnerBase.cs" />
     <Compile Include="Parallel\TestConsumer.cs" />
     <Compile Include="Parallel\TestProducer.cs" />
@@ -76,6 +76,9 @@
     <Compile Include="PeriodicTask\PeriodicTaskTest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SyncronizedTask\ISyncronizedProducer.cs" />
+    <Compile Include="SyncronizedTask\ISyncronizedConsumer.cs" />
+    <Compile Include="SyncronizedTask\SyncronizedTaskDirector.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

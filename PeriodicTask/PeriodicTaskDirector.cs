@@ -25,7 +25,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
 
     #region =====[ Protected Methods ]===============================================================================
 
-    protected override Task StartImplAsync(CancellationToken cancellationToken)
+    protected override Task InternalStartAsync(CancellationToken cancellationToken)
     {
       return Task.Run(async () =>
       {

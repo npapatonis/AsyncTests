@@ -40,14 +40,14 @@ namespace Tks.G1Track.Mobile.Shared.Common
     public Task StartAsync()
     {
       CancellationTokenSource = new CancellationTokenSource();
-      Task = StartImplAsync(CancellationTokenSource.Token);
+      Task = InternalStartAsync(CancellationTokenSource.Token);
       return Task;
     }
 
     public async Task StopAsync()
     {
       Logger.Verbose("Before CancellationTokenSource.Cancel()");
-      CancellationTokenSource.Cancel();
+      Cancel();
       Logger.Verbose("After CancellationTokenSource.Cancel()");
 
       Logger.Verbose("Before awaiting Task");
@@ -58,6 +58,11 @@ namespace Tks.G1Track.Mobile.Shared.Common
     #endregion
 
     #region =====[ Protected Methods ]===============================================================================
+
+    protected void Cancel()
+    {
+      CancellationTokenSource.Cancel();
+    }
 
     protected async Task DoAsyncOperation(IDirectedTaskContext taskContext, Func<Task> operation)
     {
@@ -118,7 +123,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
       return default(TReturn);
     }
 
-    protected abstract Task StartImplAsync(CancellationToken cancellationToken);
+    protected abstract Task InternalStartAsync(CancellationToken cancellationToken);
 
     #endregion
 

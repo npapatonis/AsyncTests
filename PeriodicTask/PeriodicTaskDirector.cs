@@ -11,7 +11,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
       : base(logger)
     {
       PeriodicTask = periodicTask;
-      TaskContext = new DirectedTaskContext();
+      TaskExceptionState = new DirectedTaskExceptionState();
     }
 
     #endregion
@@ -19,7 +19,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
     #region =====[ Private Properties ]============================================================================
 
     private IPeriodicTask PeriodicTask { get; set; }
-    private IDirectedTaskContext TaskContext { get; set; }
+    private IDirectedTaskExceptionState TaskExceptionState { get; set; }
 
     #endregion
 
@@ -35,29 +35,24 @@ namespace Tks.G1Track.Mobile.Shared.Common
         while (!cancellationToken.IsCancellationRequested)
         {
           // Let the task run
-          await DoAsyncOperation(TaskContext, async () =>
+          await DoAsyncOperation(TaskExceptionState, async () =>
           {
             Logger.Verbose("Before backgroundTask.Run()");
-
-            cont = await PeriodicTask.Run(TaskContext, Logger, cancellationToken).ConfigureAwait(false);
-
-            TaskContext.LastException = null;
-            TaskContext.LastExceptionCount = 0;
-            TaskContext.ExceptionCount = 0;
-
+            cont = await PeriodicTask.Run(TaskExceptionState, Logger, cancellationToken).ConfigureAwait(false);
+            TaskExceptionState.Clear();
             Logger.Verbose("After backgroundTask.Run()");
           }).ConfigureAwait(false);
           if (cancellationToken.IsCancellationRequested || !cont) break;
 
           // Now let it handle any exception that occurred
-          if (TaskContext.LastException != null)
+          if (TaskExceptionState.LastException != null)
           {
-            cont = PeriodicTask.HandleException(TaskContext, Logger);
+            cont = PeriodicTask.HandleException(TaskExceptionState, Logger);
           }
           if (cancellationToken.IsCancellationRequested || !cont) break;
 
           // Sleep if necessary before running again
-          await DoAsyncOperation(TaskContext, async () =>
+          await DoAsyncOperation(TaskExceptionState, async () =>
           {
             Logger.Verbose("Before sleep");
             await Task.Delay(PeriodicTask.SleepInterval, cancellationToken).ConfigureAwait(false);

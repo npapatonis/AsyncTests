@@ -52,7 +52,7 @@
     <Compile Include="BackgroundTask\BackgroundTaskContext.cs" />
     <Compile Include="BackgroundTask\BackgroundTaskHost.cs" />
     <Compile Include="BackgroundTask\BackgroundTaskTest.cs" />
-    <Compile Include="Common\DirectedTaskContext.cs" />
+    <Compile Include="Common\DirectedTaskExceptionState.cs" />
     <Compile Include="Common\Extensions.cs" />
     <Compile Include="BackgroundTask\IBackgroundTask.cs" />
     <Compile Include="Common\ILogger.cs" />
@@ -66,6 +66,7 @@
     <Compile Include="Parallel\IParallelProducer.cs" />
     <Compile Include="Parallel\ParallelPipeline.cs" />
     <Compile Include="Parallel\ParallelTaskTest.cs" />
+    <Compile Include="SyncronizedTask\SyncronizedTaskTest.cs" />
     <Compile Include="SyncronizedTask\ProducerResult.cs" />
     <Compile Include="Parallel\TaskRunnerBase.cs" />
     <Compile Include="Parallel\TestConsumer.cs" />
@@ -79,6 +80,8 @@
     <Compile Include="SyncronizedTask\ISyncronizedProducer.cs" />
     <Compile Include="SyncronizedTask\ISyncronizedConsumer.cs" />
     <Compile Include="SyncronizedTask\SyncronizedTaskDirector.cs" />
+    <Compile Include="SyncronizedTask\TestSyncronizedProducer.cs" />
+    <Compile Include="SyncronizedTask\TestSyncronizedConsumer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

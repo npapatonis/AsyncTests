@@ -2,6 +2,7 @@
 using AsyncTests.BackgroundTask;
 using AsyncTests.MiscTests;
 using AsyncTests.PeriodicTask;
+using AsyncTests.SyncronizedTask;
 
 namespace AsyncTests
 {
@@ -18,11 +19,13 @@ namespace AsyncTests
       //BackgroundTaskTest backgroundTaskTest = new BackgroundTaskTest();
       //backgroundTaskTest.Test();
 
-      PeriodicTaskTest periodicTaskTest = new PeriodicTaskTest();
-      periodicTaskTest.Test();
+      //PeriodicTaskTest periodicTaskTest = new PeriodicTaskTest();
+      //periodicTaskTest.Test();
 
       //ParallelTaskTest parallelTaskTest = new ParallelTaskTest();
       //parallelTaskTest.Test();
+
+      new SyncronizedTaskTest().Test();
 
       //ApplyFilterTest applyFilterTest = new ApplyFilterTest();
       //applyFilterTest.Test();

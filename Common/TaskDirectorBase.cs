@@ -64,9 +64,9 @@ namespace Tks.G1Track.Mobile.Shared.Common
       CancellationTokenSource.Cancel();
     }
 
-    protected async Task DoAsyncOperation(IDirectedTaskContext taskContext, Func<Task> operation)
+    protected async Task DoAsyncOperation(IDirectedTaskExceptionState taskExceptionState, Func<Task> operation)
     {
-      await DoAsyncOperation(taskContext, async () =>
+      await DoAsyncOperation(taskExceptionState, async () =>
       {
         await operation().ConfigureAwait(false);
         return 0;
@@ -74,7 +74,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
     }
 
     protected async Task<TReturn> DoAsyncOperation<TReturn>(
-      IDirectedTaskContext taskContext,
+      IDirectedTaskExceptionState taskExceptionState,
       Func<Task<TReturn>> operation)
     {
       try
@@ -87,7 +87,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
         if (!CancellationTokenSource.IsCancellationRequested)
         {
           Logger.Verbose("Before log OperationCanceledException");
-          HandleException(taskContext, operationCanceledException, false);
+          HandleException(taskExceptionState, operationCanceledException, false);
           Logger.Verbose("After log OperationCanceledException");
         }
       }
@@ -101,14 +101,14 @@ namespace Tks.G1Track.Mobile.Shared.Common
             if (!CancellationTokenSource.IsCancellationRequested)
             {
               Logger.Verbose("Before log aggregate's OperationCanceledException");
-              HandleException(taskContext, e, false);
+              HandleException(taskExceptionState, e, false);
               Logger.Verbose("After log aggregate's OperationCanceledException");
             }
             return true;
           }
 
           Logger.Verbose("Before log aggregate's other inner exception");
-          HandleException(taskContext, e, true);
+          HandleException(taskExceptionState, e, true);
           Logger.Verbose("After log aggregate's other inner exception");
           return false;
         });
@@ -116,7 +116,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
       catch (Exception exception)
       {
         Logger.Verbose("Before log Exception");
-        HandleException(taskContext, exception, true);
+        HandleException(taskExceptionState, exception, true);
         Logger.Verbose("After log Exception");
       }
 
@@ -129,15 +129,15 @@ namespace Tks.G1Track.Mobile.Shared.Common
 
     #region =====[ Private Methods ]=================================================================================
 
-    private void HandleException(IDirectedTaskContext taskContext, Exception exception, bool isError)
+    private void HandleException(IDirectedTaskExceptionState taskExceptionState, Exception exception, bool isError)
     {
-      taskContext.LastException = exception;
-      taskContext.ExceptionCount++;
+      taskExceptionState.LastException = exception;
+      taskExceptionState.ExceptionCount++;
 
       string message = exception.ExpandMessage();
       if (message != LastExceptionMessage)
       {
-        taskContext.LastExceptionCount = 1;
+        taskExceptionState.LastExceptionCount = 1;
 
         if (isError)
         {
@@ -151,7 +151,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
       }
       else
       {
-        taskContext.LastExceptionCount++;
+        taskExceptionState.LastExceptionCount++;
       }
     }
 

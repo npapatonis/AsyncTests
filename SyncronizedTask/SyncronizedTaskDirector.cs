@@ -13,10 +13,10 @@ namespace Tks.G1Track.Mobile.Shared.Common
       ILogger logger)
       : base(logger)
     {
-      Producer = Producer;
-      Consumer = Consumer;
-      ProducerContext = new DirectedTaskContext();
-      ConsumerContext = new DirectedTaskContext();
+      Producer = producer;
+      Consumer = consumer;
+      ProducerExceptionState = new DirectedTaskExceptionState();
+      ConsumerExceptionState = new DirectedTaskExceptionState();
     }
 
     #endregion
@@ -25,8 +25,8 @@ namespace Tks.G1Track.Mobile.Shared.Common
 
     private ISyncronizedProducer<TData> Producer { get; set; }
     private ISyncronizedConsumer<TData> Consumer { get; set; }
-    private IDirectedTaskContext ProducerContext { get; set; }
-    private IDirectedTaskContext ConsumerContext { get; set; }
+    private IDirectedTaskExceptionState ProducerExceptionState { get; set; }
+    private IDirectedTaskExceptionState ConsumerExceptionState { get; set; }
 
     #endregion
 
@@ -44,7 +44,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
         while (!cancellationToken.IsCancellationRequested)
         {
           // Wait for consumer first since it regulates the overall data flow
-          bool consumerContinue = await DoAsyncOperation(ConsumerContext, async () =>
+          bool consumerContinue = await DoAsyncOperation(ConsumerExceptionState, async () =>
           {
             Logger.Verbose("Before awaiting consumer task");
             var result = await consumerTask;
@@ -62,7 +62,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
           if (!consumerContinue) Cancel();
 
           // Wait for producer
-          var producerResult = await DoAsyncOperation(ProducerContext, async () =>
+          var producerResult = await DoAsyncOperation(ProducerExceptionState, async () =>
           {
             Logger.Verbose("Before awaiting producer task");
             var result = await producerTask;

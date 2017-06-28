@@ -24,10 +24,10 @@ namespace AsyncTests.PeriodicTask
 
     public TimeSpan SleepInterval => TimeSpan.FromMilliseconds(3000);
 
-    public bool HandleException(IDirectedTaskContext taskContext, ILogger logger)
+    public bool HandleException(IDirectedTaskExceptionState taskExceptionState, ILogger logger)
     {
       //if (taskContext.LastException is TaskCanceledException && taskContext.LastExceptionCount == 3)
-      if (taskContext.LastExceptionCount == 3)
+      if (taskExceptionState.LastExceptionCount == 3)
       {
         logger.Warning("Handling exception that has occurred too many times");
         return false;
@@ -36,9 +36,9 @@ namespace AsyncTests.PeriodicTask
       return true;
     }
 
-    public async Task<bool> Run(IDirectedTaskContext taskContext, ILogger logger, CancellationToken cancellationToken)
+    public async Task<bool> Run(IDirectedTaskExceptionState taskExceptionState, ILogger logger, CancellationToken cancellationToken)
     {
-      logger.Verbose($"taskContext.LastExceptionCount: {taskContext.LastExceptionCount}");
+      logger.Verbose($"taskContext.LastExceptionCount: {taskExceptionState.LastExceptionCount}");
       //if (taskContext.LastExceptionCount > 3) return false;
 
       logger.Information("Attempting HTTP GET that will timeout");

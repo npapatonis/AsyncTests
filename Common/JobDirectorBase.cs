@@ -87,7 +87,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
         if (!CancellationTokenSource.IsCancellationRequested)
         {
           Logger.Verbose("Before log OperationCanceledException");
-          HandleException(jobExceptionState, operationCanceledException, false);
+          HandleException(jobExceptionState, operationCanceledException, Logger.Warning);
           Logger.Verbose("After log OperationCanceledException");
         }
       }
@@ -101,14 +101,14 @@ namespace Tks.G1Track.Mobile.Shared.Common
             if (!CancellationTokenSource.IsCancellationRequested)
             {
               Logger.Verbose("Before log aggregate's OperationCanceledException");
-              HandleException(jobExceptionState, e, false);
+              HandleException(jobExceptionState, e, Logger.Warning);
               Logger.Verbose("After log aggregate's OperationCanceledException");
             }
             return true;
           }
 
           Logger.Verbose("Before log aggregate's other inner exception");
-          HandleException(jobExceptionState, e, true);
+          HandleException(jobExceptionState, e, Logger.Error);
           Logger.Verbose("After log aggregate's other inner exception");
           return false;
         });
@@ -116,7 +116,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
       catch (Exception exception)
       {
         Logger.Verbose("Before log Exception");
-        HandleException(jobExceptionState, exception, true);
+        HandleException(jobExceptionState, exception, Logger.Error);
         Logger.Verbose("After log Exception");
       }
 
@@ -129,8 +129,11 @@ namespace Tks.G1Track.Mobile.Shared.Common
 
     #region =====[ Private Methods ]=================================================================================
 
-    private void HandleException(IJobExceptionState jobExceptionState, Exception exception, bool isError)
+    private void HandleException(IJobExceptionState jobExceptionState, Exception exception, Action<string> logAction)
     {
+      // If no jobExceptionState, ignore this operation's exception
+      if (jobExceptionState == null) return;
+
       jobExceptionState.LastException = exception;
       jobExceptionState.ExceptionCount++;
 
@@ -138,15 +141,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
       if (message != LastExceptionMessage)
       {
         jobExceptionState.LastExceptionCount = 1;
-
-        if (isError)
-        {
-          Logger.Error(message);
-        }
-        else
-        {
-          Logger.Warning(message);
-        }
+        logAction(message);
         LastExceptionMessage = message;
       }
       else

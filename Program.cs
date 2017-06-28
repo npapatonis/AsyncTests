@@ -1,7 +1,5 @@
-﻿using AsyncTests.ApplyFilter;
-using AsyncTests.MiscTests;
+﻿using AsyncTests.OverlappedTask;
 using AsyncTests.PeriodicJob;
-using AsyncTests.OverlappedTask;
 
 namespace AsyncTests
 {
@@ -9,28 +7,13 @@ namespace AsyncTests
   {
     static void Main(string[] args)
     {
-      //AsyncEventsTest asyncEventsTest = new AsyncEventsTest();
-      //asyncEventsTest.Test();
+      //new AsyncEventsTest().Test();
+      //new CancellationHandlingTest().Test();
+      new PeriodicJobTest().Test();
+      //new ApplyFilterTest().Test();
+      //new LockvsSemaphoreTest().Test(false).Wait();
 
-      //CancellationHandlingTest cancellationHandlingTest = new CancellationHandlingTest();
-      //cancellationHandlingTest.Test();
-
-      //BackgroundTaskTest backgroundTaskTest = new BackgroundTaskTest();
-      //backgroundTaskTest.Test();
-
-      //PeriodicJobTest periodicJobTest = new PeriodicJobTest();
-      //periodicJobTest.Test();
-
-      //ParallelTaskTest parallelTaskTest = new ParallelTaskTest();
-      //parallelTaskTest.Test();
-
-      new OverlappedJobTest().Test();
-
-      //ApplyFilterTest applyFilterTest = new ApplyFilterTest();
-      //applyFilterTest.Test();
-
-      //LockvsSemaphoreTest lockvsSemaphoreTest = new LockvsSemaphoreTest();
-      //lockvsSemaphoreTest.Test(false).Wait();
+      //new OverlappedJobTest().Test();
     }
   }
 }

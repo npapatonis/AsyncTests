@@ -43,6 +43,13 @@ namespace AsyncTests.PeriodicJob
 
       logger.Information("Attempting HTTP GET that will timeout");
       var httpClient = new HttpClient();
+
+      // Use this to create aggregate exception with TaskCancelled inner
+      //httpClient.Timeout = TimeSpan.FromMilliseconds(10);
+      //var task = httpClient.GetAsync("http://www.google.com", cancellationToken);
+      //await Task.WhenAny(task, Task.CompletedTask);
+      //var response = task.Result;
+
       //httpClient.Timeout = TimeSpan.FromMilliseconds(10);
       var response = await httpClient.GetAsync("http://www.google.com", cancellationToken);
       HttpGetCompleted?.Invoke(this, new HttpGetCompletedEventArgs(response, cancellationToken));

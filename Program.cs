@@ -1,5 +1,4 @@
 ﻿using AsyncTests.ApplyFilter;
-using AsyncTests.BackgroundTask;
 using AsyncTests.MiscTests;
 using AsyncTests.PeriodicTask;
 using AsyncTests.SyncronizedTask;

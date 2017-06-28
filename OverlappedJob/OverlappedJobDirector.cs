@@ -3,30 +3,30 @@ using System.Threading.Tasks;
 
 namespace Tks.G1Track.Mobile.Shared.Common
 {
-  internal class SyncronizedTaskDirector<TData> : TaskDirectorBase
+  internal class OverlappedJobDirector<TData> : JobDirectorBase
   {
     #region =====[ ctor ]==========================================================================================
 
-    public SyncronizedTaskDirector(
-      ISyncronizedProducer<TData> producer,
-      ISyncronizedConsumer<TData> consumer,
+    public OverlappedJobDirector(
+      IOverlappedProducer<TData> producer,
+      IOverlappedConsumer<TData> consumer,
       ILogger logger)
       : base(logger)
     {
       Producer = producer;
       Consumer = consumer;
-      ProducerExceptionState = new DirectedTaskExceptionState();
-      ConsumerExceptionState = new DirectedTaskExceptionState();
+      ProducerExceptionState = new JobExceptionState();
+      ConsumerExceptionState = new JobExceptionState();
     }
 
     #endregion
 
     #region =====[ Private Properties ]============================================================================
 
-    private ISyncronizedProducer<TData> Producer { get; set; }
-    private ISyncronizedConsumer<TData> Consumer { get; set; }
-    private IDirectedTaskExceptionState ProducerExceptionState { get; set; }
-    private IDirectedTaskExceptionState ConsumerExceptionState { get; set; }
+    private IOverlappedProducer<TData> Producer { get; set; }
+    private IOverlappedConsumer<TData> Consumer { get; set; }
+    private IJobExceptionState ProducerExceptionState { get; set; }
+    private IJobExceptionState ConsumerExceptionState { get; set; }
 
     #endregion
 
@@ -75,19 +75,19 @@ namespace Tks.G1Track.Mobile.Shared.Common
           Logger.Verbose($"Testing producerResult.Continue flag: {producerResult.Continue}");
           if (producerResult.Continue)
           {
-            Logger.Verbose("Run producer task again");
+            Logger.Verbose("Run producer job again");
             producerTask = Producer.Run(Logger, cancellationToken);
           }
           else
           {
             // If producer is out of data, set an exit flag and create
-            // fake producer task so consumer can run one more time
+            // fake producer job so consumer can run one more time
             Logger.Verbose("Prepare for producer exit");
             producerExit = true;
             producerTask = Task.FromResult(default(ProducerResult<TData>));
           }
           // Run consumer
-          Logger.Verbose("Run consumer task again");
+          Logger.Verbose("Run consumer job again");
           consumerTask = Consumer.Run(producerResult.Data, Logger, cancellationToken);
         }
       }, cancellationToken);

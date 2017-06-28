@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Tks.G1Track.Mobile.Shared.Common
 {
-  public class TestSyncronizedProducer : ISyncronizedProducer<List<int>>
+  public class TestProducer : IOverlappedProducer<List<int>>
   {
     private int Iterations = 0;
 

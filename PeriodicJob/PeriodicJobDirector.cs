@@ -3,23 +3,23 @@ using System.Threading.Tasks;
 
 namespace Tks.G1Track.Mobile.Shared.Common
 {
-  public class PeriodicTaskDirector : TaskDirectorBase
+  public class PeriodicJobDirector : JobDirectorBase
   {
     #region =====[ ctor ]==========================================================================================
 
-    public PeriodicTaskDirector(IPeriodicTask periodicTask, ILogger logger)
+    public PeriodicJobDirector(IPeriodicJob periodicJob, ILogger logger)
       : base(logger)
     {
-      PeriodicTask = periodicTask;
-      TaskExceptionState = new DirectedTaskExceptionState();
+      PeriodicJob = periodicJob;
+      JobExceptionState = new JobExceptionState();
     }
 
     #endregion
 
     #region =====[ Private Properties ]============================================================================
 
-    private IPeriodicTask PeriodicTask { get; set; }
-    private IDirectedTaskExceptionState TaskExceptionState { get; set; }
+    private IPeriodicJob PeriodicJob { get; set; }
+    private IJobExceptionState JobExceptionState { get; set; }
 
     #endregion
 
@@ -35,27 +35,27 @@ namespace Tks.G1Track.Mobile.Shared.Common
         while (!cancellationToken.IsCancellationRequested)
         {
           // Let the task run
-          await DoAsyncOperation(TaskExceptionState, async () =>
+          await DoAsyncOperation(JobExceptionState, async () =>
           {
             Logger.Verbose("Before backgroundTask.Run()");
-            cont = await PeriodicTask.Run(TaskExceptionState, Logger, cancellationToken).ConfigureAwait(false);
-            TaskExceptionState.Clear();
+            cont = await PeriodicJob.Run(JobExceptionState, Logger, cancellationToken).ConfigureAwait(false);
+            JobExceptionState.Clear();
             Logger.Verbose("After backgroundTask.Run()");
           }).ConfigureAwait(false);
           if (cancellationToken.IsCancellationRequested || !cont) break;
 
           // Now let it handle any exception that occurred
-          if (TaskExceptionState.LastException != null)
+          if (JobExceptionState.LastException != null)
           {
-            cont = PeriodicTask.HandleException(TaskExceptionState, Logger);
+            cont = PeriodicJob.HandleException(JobExceptionState, Logger);
           }
           if (cancellationToken.IsCancellationRequested || !cont) break;
 
           // Sleep if necessary before running again
-          await DoAsyncOperation(TaskExceptionState, async () =>
+          await DoAsyncOperation(JobExceptionState, async () =>
           {
             Logger.Verbose("Before sleep");
-            await Task.Delay(PeriodicTask.SleepInterval, cancellationToken).ConfigureAwait(false);
+            await Task.Delay(PeriodicJob.SleepInterval, cancellationToken).ConfigureAwait(false);
             Logger.Verbose("After sleep");
           }).ConfigureAwait(false);
         }

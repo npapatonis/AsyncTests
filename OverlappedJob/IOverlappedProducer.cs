@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Tks.G1Track.Mobile.Shared.Common
 {
-  public interface ISyncronizedProducer<TData>
+  public interface IOverlappedProducer<TData>
   {
     Task<ProducerResult<TData>> Run(ILogger logger, CancellationToken cancellationToken);
   }

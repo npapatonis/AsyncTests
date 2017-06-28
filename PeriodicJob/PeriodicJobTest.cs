@@ -2,19 +2,19 @@
 using System.Threading.Tasks;
 using Tks.G1Track.Mobile.Shared.Common;
 
-namespace AsyncTests.PeriodicTask
+namespace AsyncTests.PeriodicJob
 {
-  internal class PeriodicTaskTest
+  internal class PeriodicJobTest
   {
     internal void Test()
     {
       ILogger logger = new Logger();
-      IPeriodicTask periodicTask = new PeriodicTask();
-      (periodicTask as PeriodicTask).HttpGetCompleted += HandleHttpGetCompleted;
+      IPeriodicJob periodicJob = new PeriodicJob();
+      (periodicJob as PeriodicJob).HttpGetCompleted += HandleHttpGetCompleted;
 
-      Console.WriteLine("PeriodicTaskTest.Test, Press a key to stop...");
+      Console.WriteLine("PeriodicJobTest.Test, Press a key to stop...");
 
-      ITaskDirector director = new PeriodicTaskDirector(periodicTask, logger);
+      IJobDirector director = new PeriodicJobDirector(periodicJob, logger);
       Task task = director.StartAsync();
 
       Task.WaitAny(KeyPressed(), task);
@@ -23,7 +23,7 @@ namespace AsyncTests.PeriodicTask
       director.StopAsync().Wait();
       task.Wait();
 
-      Console.WriteLine("PeriodicTaskTest.Test, Press a key to exit...");
+      Console.WriteLine("PeriodicJobTest.Test, Press a key to exit...");
       KeyPressed().Wait();
     }
 

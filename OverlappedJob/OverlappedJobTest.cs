@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tks.G1Track.Mobile.Shared.Common;
 
-namespace AsyncTests.SyncronizedTask
+namespace AsyncTests.OverlappedTask
 {
-  internal class SyncronizedTaskTest
+  internal class OverlappedJobTest
   {
     internal void Test()
     {
       ILogger logger = new Logger();
-      ISyncronizedProducer<List<int>> producer = new TestSyncronizedProducer();
-      ISyncronizedConsumer<List<int>> consumer = new TestSyncronizedConsumer(52);
+      IOverlappedProducer<List<int>> producer = new TestProducer();
+      IOverlappedConsumer<List<int>> consumer = new TestConsumer(52);
 
-      logger.Information("SyncronizedTaskTest.Test, Press a key to stop...");
+      logger.Information("OverlappedJobTest.Test, Press a key to stop...");
 
-      ITaskDirector director = new SyncronizedTaskDirector<List<int>>(producer, consumer, logger);
+      IJobDirector director = new OverlappedJobDirector<List<int>>(producer, consumer, logger);
       Task task = director.StartAsync();
 
       Task.WaitAny(KeyPressed(), task);
@@ -24,7 +24,7 @@ namespace AsyncTests.SyncronizedTask
       director.StopAsync().Wait();
       task.Wait();
 
-      logger.Information("SyncronizedTaskTest.Test, Press a key to exit...");
+      logger.Information("OverlappedJobTest.Test, Press a key to exit...");
       KeyPressed().Wait();
     }
 

@@ -1,7 +1,7 @@
 ﻿using AsyncTests.ApplyFilter;
 using AsyncTests.MiscTests;
-using AsyncTests.PeriodicTask;
-using AsyncTests.SyncronizedTask;
+using AsyncTests.PeriodicJob;
+using AsyncTests.OverlappedTask;
 
 namespace AsyncTests
 {
@@ -18,13 +18,13 @@ namespace AsyncTests
       //BackgroundTaskTest backgroundTaskTest = new BackgroundTaskTest();
       //backgroundTaskTest.Test();
 
-      //PeriodicTaskTest periodicTaskTest = new PeriodicTaskTest();
-      //periodicTaskTest.Test();
+      //PeriodicJobTest periodicJobTest = new PeriodicJobTest();
+      //periodicJobTest.Test();
 
       //ParallelTaskTest parallelTaskTest = new ParallelTaskTest();
       //parallelTaskTest.Test();
 
-      new SyncronizedTaskTest().Test();
+      new OverlappedJobTest().Test();
 
       //ApplyFilterTest applyFilterTest = new ApplyFilterTest();
       //applyFilterTest.Test();

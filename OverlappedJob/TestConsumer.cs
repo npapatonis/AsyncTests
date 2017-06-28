@@ -4,16 +4,16 @@ using System.Threading.Tasks;
 
 namespace Tks.G1Track.Mobile.Shared.Common
 {
-  public class TestSyncronizedConsumer : ISyncronizedConsumer<List<int>>
+  public class TestConsumer : IOverlappedConsumer<List<int>>
   {
     private int MaxNumber { get; set; }
 
-    public TestSyncronizedConsumer()
+    public TestConsumer()
       : this(int.MaxValue)
     {
     }
 
-    public TestSyncronizedConsumer(int maxNumber)
+    public TestConsumer(int maxNumber)
     {
       MaxNumber = maxNumber;
     }

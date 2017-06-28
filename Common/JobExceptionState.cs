@@ -2,7 +2,7 @@
 
 namespace Tks.G1Track.Mobile.Shared.Common
 {
-  public interface IDirectedTaskExceptionState
+  public interface IJobExceptionState
   {
     Exception LastException { get; set; }
     int LastExceptionCount { get; set; }
@@ -10,7 +10,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
     void Clear();
   }
 
-  public class DirectedTaskExceptionState : IDirectedTaskExceptionState
+  public class JobExceptionState : IJobExceptionState
   {
     #region =====[ Public Properties ]=============================================================================
 

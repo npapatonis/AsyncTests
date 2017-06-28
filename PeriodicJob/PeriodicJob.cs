@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Tks.G1Track.Mobile.Shared.Common;
 
-namespace AsyncTests.PeriodicTask
+namespace AsyncTests.PeriodicJob
 {
   internal class HttpGetCompletedEventArgs : EventArgs
   {
@@ -18,16 +18,16 @@ namespace AsyncTests.PeriodicTask
     internal CancellationToken CancellationToken { get; private set; }
   }
 
-  internal class PeriodicTask : IPeriodicTask
+  internal class PeriodicJob : IPeriodicJob
   {
     public event EventHandler<HttpGetCompletedEventArgs> HttpGetCompleted;
 
     public TimeSpan SleepInterval => TimeSpan.FromMilliseconds(3000);
 
-    public bool HandleException(IDirectedTaskExceptionState taskExceptionState, ILogger logger)
+    public bool HandleException(IJobExceptionState jobExceptionState, ILogger logger)
     {
       //if (taskContext.LastException is TaskCanceledException && taskContext.LastExceptionCount == 3)
-      if (taskExceptionState.LastExceptionCount == 3)
+      if (jobExceptionState.LastExceptionCount == 3)
       {
         logger.Warning("Handling exception that has occurred too many times");
         return false;
@@ -36,9 +36,9 @@ namespace AsyncTests.PeriodicTask
       return true;
     }
 
-    public async Task<bool> Run(IDirectedTaskExceptionState taskExceptionState, ILogger logger, CancellationToken cancellationToken)
+    public async Task<bool> Run(IJobExceptionState jobExceptionState, ILogger logger, CancellationToken cancellationToken)
     {
-      logger.Verbose($"taskContext.LastExceptionCount: {taskExceptionState.LastExceptionCount}");
+      logger.Verbose($"taskContext.LastExceptionCount: {jobExceptionState.LastExceptionCount}");
       //if (taskContext.LastExceptionCount > 3) return false;
 
       logger.Information("Attempting HTTP GET that will timeout");

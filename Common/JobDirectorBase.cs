@@ -4,17 +4,17 @@ using System.Threading.Tasks;
 
 namespace Tks.G1Track.Mobile.Shared.Common
 {
-  public interface ITaskDirector
+  public interface IJobDirector
   {
     Task StartAsync();
     Task StopAsync();
   }
 
-  public abstract class TaskDirectorBase : ITaskDirector
+  public abstract class JobDirectorBase : IJobDirector
   {
     #region =====[ ctor ]==========================================================================================
 
-    public TaskDirectorBase(ILogger logger)
+    public JobDirectorBase(ILogger logger)
     {
       Logger = logger;
     }
@@ -35,7 +35,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
 
     #endregion
 
-    #region =====[ ITaskDirector Methods ]===========================================================================
+    #region =====[ IJobDirector Methods ]============================================================================
 
     public Task StartAsync()
     {
@@ -64,9 +64,9 @@ namespace Tks.G1Track.Mobile.Shared.Common
       CancellationTokenSource.Cancel();
     }
 
-    protected async Task DoAsyncOperation(IDirectedTaskExceptionState taskExceptionState, Func<Task> operation)
+    protected async Task DoAsyncOperation(IJobExceptionState jobExceptionState, Func<Task> operation)
     {
-      await DoAsyncOperation(taskExceptionState, async () =>
+      await DoAsyncOperation(jobExceptionState, async () =>
       {
         await operation().ConfigureAwait(false);
         return 0;
@@ -74,7 +74,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
     }
 
     protected async Task<TReturn> DoAsyncOperation<TReturn>(
-      IDirectedTaskExceptionState taskExceptionState,
+      IJobExceptionState jobExceptionState,
       Func<Task<TReturn>> operation)
     {
       try
@@ -87,7 +87,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
         if (!CancellationTokenSource.IsCancellationRequested)
         {
           Logger.Verbose("Before log OperationCanceledException");
-          HandleException(taskExceptionState, operationCanceledException, false);
+          HandleException(jobExceptionState, operationCanceledException, false);
           Logger.Verbose("After log OperationCanceledException");
         }
       }
@@ -101,14 +101,14 @@ namespace Tks.G1Track.Mobile.Shared.Common
             if (!CancellationTokenSource.IsCancellationRequested)
             {
               Logger.Verbose("Before log aggregate's OperationCanceledException");
-              HandleException(taskExceptionState, e, false);
+              HandleException(jobExceptionState, e, false);
               Logger.Verbose("After log aggregate's OperationCanceledException");
             }
             return true;
           }
 
           Logger.Verbose("Before log aggregate's other inner exception");
-          HandleException(taskExceptionState, e, true);
+          HandleException(jobExceptionState, e, true);
           Logger.Verbose("After log aggregate's other inner exception");
           return false;
         });
@@ -116,7 +116,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
       catch (Exception exception)
       {
         Logger.Verbose("Before log Exception");
-        HandleException(taskExceptionState, exception, true);
+        HandleException(jobExceptionState, exception, true);
         Logger.Verbose("After log Exception");
       }
 
@@ -129,15 +129,15 @@ namespace Tks.G1Track.Mobile.Shared.Common
 
     #region =====[ Private Methods ]=================================================================================
 
-    private void HandleException(IDirectedTaskExceptionState taskExceptionState, Exception exception, bool isError)
+    private void HandleException(IJobExceptionState jobExceptionState, Exception exception, bool isError)
     {
-      taskExceptionState.LastException = exception;
-      taskExceptionState.ExceptionCount++;
+      jobExceptionState.LastException = exception;
+      jobExceptionState.ExceptionCount++;
 
       string message = exception.ExpandMessage();
       if (message != LastExceptionMessage)
       {
-        taskExceptionState.LastExceptionCount = 1;
+        jobExceptionState.LastExceptionCount = 1;
 
         if (isError)
         {
@@ -151,7 +151,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
       }
       else
       {
-        taskExceptionState.LastExceptionCount++;
+        jobExceptionState.LastExceptionCount++;
       }
     }
 

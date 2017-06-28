@@ -30,7 +30,6 @@ namespace Tks.G1Track.Mobile.Shared.Common
 
     #region =====[ Protected Properties ]============================================================================
 
-    protected string LastExceptionMessage { get; set; }
     protected ILogger Logger { get; set; }
 
     #endregion
@@ -132,17 +131,17 @@ namespace Tks.G1Track.Mobile.Shared.Common
     private void HandleException(IJobExceptionState jobExceptionState, Exception exception, Action<string> logAction)
     {
       // If no jobExceptionState, ignore this operation's exception
-      if (jobExceptionState == null) return;
+      if (jobExceptionState == JobExceptionState.None) return;
 
       jobExceptionState.LastException = exception;
       jobExceptionState.ExceptionCount++;
 
       string message = exception.ExpandMessage();
-      if (message != LastExceptionMessage)
+      if (message != jobExceptionState.LastExceptionMessage)
       {
         jobExceptionState.LastExceptionCount = 1;
+        jobExceptionState.LastExceptionMessage = message;
         logAction(message);
-        LastExceptionMessage = message;
       }
       else
       {

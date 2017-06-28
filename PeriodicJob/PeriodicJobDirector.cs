@@ -52,7 +52,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
           if (cancellationToken.IsCancellationRequested || !cont) break;
 
           // Sleep if necessary before running again
-          await DoAsyncOperation(null, async () =>
+          await DoAsyncOperation(Common.JobExceptionState.None, async () =>
           {
             Logger.Verbose("Before sleep");
             await Task.Delay(PeriodicJob.SleepInterval, cancellationToken).ConfigureAwait(false);

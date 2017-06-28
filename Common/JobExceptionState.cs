@@ -5,6 +5,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
   public interface IJobExceptionState
   {
     Exception LastException { get; set; }
+    string LastExceptionMessage { get; set; }
     int LastExceptionCount { get; set; }
     int ExceptionCount { get; set; }
     void Clear();
@@ -15,8 +16,11 @@ namespace Tks.G1Track.Mobile.Shared.Common
     #region =====[ Public Properties ]=============================================================================
 
     public Exception LastException { get; set; }
+    public string LastExceptionMessage { get; set; }
     public int LastExceptionCount { get; set; }
     public int ExceptionCount { get; set; }
+
+    public static IJobExceptionState None { get; } = new JobExceptionState();
 
     public void Clear()
     {

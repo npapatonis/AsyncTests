@@ -1,20 +1,22 @@
 ﻿namespace Tks.G1Track.Mobile.Shared.Common
 {
-  public class ProducerResult<TData> : JobResult
+  public class JobResult
   {
     #region =====[ ctor ]==========================================================================================
 
-    internal ProducerResult(bool cont, TData data)
-      : base(cont)
+    internal JobResult(bool cont)
     {
-      Data = data;
+      Continue = cont;
     }
 
     #endregion
 
     #region =====[ Public Properties ]=============================================================================
 
-    public TData Data { get; private set; }
+    public bool Continue { get; private set; }
+
+    public static JobResult TrueResult = new JobResult(true);
+    public static JobResult FalseResult = new JobResult(false);
 
     #endregion
   }

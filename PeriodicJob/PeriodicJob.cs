@@ -26,7 +26,6 @@ namespace AsyncTests.PeriodicJob
 
     public bool HandleException(IJobExceptionState jobExceptionState, ILogger logger)
     {
-      //if (taskContext.LastException is TaskCanceledException && taskContext.LastExceptionCount == 3)
       if (jobExceptionState.LastExceptionCount == 3)
       {
         logger.Warning("Handling exception that has occurred too many times");
@@ -36,7 +35,7 @@ namespace AsyncTests.PeriodicJob
       return true;
     }
 
-    public async Task<bool> Run(IJobExceptionState jobExceptionState, ILogger logger, CancellationToken cancellationToken)
+    public async Task<JobResult> Run(IJobExceptionState jobExceptionState, ILogger logger, CancellationToken cancellationToken)
     {
       logger.Verbose($"taskContext.LastExceptionCount: {jobExceptionState.LastExceptionCount}");
       //if (taskContext.LastExceptionCount > 3) return false;
@@ -54,7 +53,7 @@ namespace AsyncTests.PeriodicJob
       var response = await httpClient.GetAsync("http://www.google.com", cancellationToken);
       HttpGetCompleted?.Invoke(this, new HttpGetCompletedEventArgs(response, cancellationToken));
 
-      return true;
+      return JobResult.TrueResult;
     }
   }
 }

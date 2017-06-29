@@ -29,30 +29,32 @@ namespace Tks.G1Track.Mobile.Shared.Common
     {
       return Task.Run(async () =>
       {
-        bool cont = true;
         Logger.Verbose("Task.Run starting");
 
         while (!cancellationToken.IsCancellationRequested)
         {
-          // Let the task run
-          await DoAsyncOperation(JobExceptionState, async () =>
-          {
-            Logger.Verbose("Before backgroundTask.Run()");
-            cont = await PeriodicJob.Run(JobExceptionState, Logger, cancellationToken).ConfigureAwait(false);
-            JobExceptionState.Clear();
-            Logger.Verbose("After backgroundTask.Run()");
-          }).ConfigureAwait(false);
-          if (cancellationToken.IsCancellationRequested || !cont) break;
+          var jobResult = await RunJobAsync(PeriodicJob, JobExceptionState, cancellationToken);
+          if (!jobResult.Continue) break;
 
-          // Now let it handle any exception that occurred
-          if (JobExceptionState.LastException != null)
-          {
-            cont = PeriodicJob.HandleException(JobExceptionState, Logger);
-          }
-          if (cancellationToken.IsCancellationRequested || !cont) break;
+          //// Let the job run
+          //var jobResult = await DoAsyncOperation(JobExceptionState, async () =>
+          //{
+          //  Logger.Verbose("Before backgroundTask.Run()");
+          //  var result = await PeriodicJob.Run(JobExceptionState, Logger, cancellationToken).ConfigureAwait(false);
+          //  JobExceptionState.Clear();
+          //  Logger.Verbose("After backgroundTask.Run()");
+          //  return result;
+          //}).ConfigureAwait(false);
+          //if (ShouldStop(cancellationToken, jobResult)) break;
+
+          //// Now let it handle any exception that occurred
+          //if (JobExceptionState.LastException != null)
+          //{
+          //  if (!PeriodicJob.HandleException(JobExceptionState, Logger)) break;
+          //}
 
           // Sleep if necessary before running again
-          await DoAsyncOperation(Common.JobExceptionState.None, async () =>
+          await DoOperationAsync(Common.JobExceptionState.None, async () =>
           {
             Logger.Verbose("Before sleep");
             await Task.Delay(PeriodicJob.SleepInterval, cancellationToken).ConfigureAwait(false);

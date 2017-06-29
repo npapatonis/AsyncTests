@@ -48,11 +48,13 @@
     <Compile Include="ApplyFilter\ApplyFilterTest.cs" />
     <Compile Include="AsyncEvents\AsyncEvents.cs" />
     <Compile Include="AsyncEvents\AsyncEventsTest.cs" />
+    <Compile Include="Common\IDirectableJob.cs" />
     <Compile Include="Common\JobExceptionState.cs" />
     <Compile Include="Common\Extensions.cs" />
     <Compile Include="Common\ILogger.cs" />
     <Compile Include="CancellationHandling\CancellationHandling.cs" />
     <Compile Include="CancellationHandling\CancellationHandlingTest.cs" />
+    <Compile Include="Common\JobResult.cs" />
     <Compile Include="Common\Logger.cs" />
     <Compile Include="Common\JobDirectorBase.cs" />
     <Compile Include="EventHub\EventHub.cs" />

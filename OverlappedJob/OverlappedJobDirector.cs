@@ -44,7 +44,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
         while (!cancellationToken.IsCancellationRequested)
         {
           // Wait for consumer first since it regulates the overall data flow
-          bool consumerContinue = await DoAsyncOperation(ConsumerExceptionState, async () =>
+          bool consumerContinue = await DoOperationAsync(ConsumerExceptionState, async () =>
           {
             Logger.Verbose("Before awaiting consumer task");
             var result = await consumerTask;
@@ -62,7 +62,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
           if (!consumerContinue) Cancel();
 
           // Wait for producer
-          var producerResult = await DoAsyncOperation(ProducerExceptionState, async () =>
+          var producerResult = await DoOperationAsync(ProducerExceptionState, async () =>
           {
             Logger.Verbose("Before awaiting producer task");
             var result = await producerTask;

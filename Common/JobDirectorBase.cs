@@ -63,16 +63,16 @@ namespace Tks.G1Track.Mobile.Shared.Common
       CancellationTokenSource.Cancel();
     }
 
-    protected async Task DoAsyncOperation(IJobExceptionState jobExceptionState, Func<Task> operation)
+    protected async Task DoOperationAsync(IJobExceptionState jobExceptionState, Func<Task> operation)
     {
-      await DoAsyncOperation(jobExceptionState, async () =>
+      await DoOperationAsync(jobExceptionState, async () =>
       {
         await operation().ConfigureAwait(false);
         return 0;
       }).ConfigureAwait(false);
     }
 
-    protected async Task<TReturn> DoAsyncOperation<TReturn>(
+    protected async Task<TReturn> DoOperationAsync<TReturn>(
       IJobExceptionState jobExceptionState,
       Func<Task<TReturn>> operation)
     {
@@ -123,6 +123,37 @@ namespace Tks.G1Track.Mobile.Shared.Common
     }
 
     protected abstract Task InternalStartAsync(CancellationToken cancellationToken);
+
+    protected async Task<JobResult> RunJobAsync(
+      IDirectableJob job,
+      IJobExceptionState jobExceptionState,
+      CancellationToken cancellationToken)
+    {
+      var jobResult = await DoOperationAsync(jobExceptionState, async () =>
+      {
+        Logger.Verbose("Before IDirectableJob.Run()");
+        var result = await job.Run(jobExceptionState, Logger, cancellationToken).ConfigureAwait(false);
+        jobExceptionState.Clear();
+        Logger.Verbose("After IDirectableJob.Run()");
+        return result;
+      }).ConfigureAwait(false);
+      if (ShouldStop(cancellationToken, jobResult)) return JobResult.FalseResult;
+
+      // Now let it handle any exception that occurred
+      if (jobExceptionState.LastException != null)
+      {
+        if (!job.HandleException(jobExceptionState, Logger)) return JobResult.FalseResult;
+      }
+
+      return jobResult ?? JobResult.TrueResult;
+    }
+
+    protected bool ShouldStop(CancellationToken cancellationToken, JobResult jobResult = null)
+    {
+      if (cancellationToken.IsCancellationRequested) return true;
+      if (jobResult != null && !jobResult.Continue) return true;
+      return false;
+    }
 
     #endregion
 

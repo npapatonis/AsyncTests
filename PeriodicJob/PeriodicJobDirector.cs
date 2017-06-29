@@ -54,7 +54,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
           //}
 
           // Sleep if necessary before running again
-          await DoOperationAsync(Common.JobExceptionState.None, async () =>
+          await TryOperationAsync(Common.JobExceptionState.None, async () =>
           {
             Logger.Verbose("Before sleep");
             await Task.Delay(PeriodicJob.SleepInterval, cancellationToken).ConfigureAwait(false);

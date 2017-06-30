@@ -17,14 +17,15 @@ namespace AsyncTests.PeriodicJob
       IJobDirector director = new PeriodicJobDirector(periodicJob, logger);
       Task task = director.StartAsync();
 
-      Task.WaitAny(KeyPressed(), task);
+      Task keyPressTask = new KeyPress().GetAsync(ConsoleKey.Escape);
+      if (Task.WaitAny(keyPressTask, task) == 0) keyPressTask = new KeyPress().GetAsync(ConsoleKey.Escape);
 
       Console.WriteLine();
       director.StopAsync().Wait();
       task.Wait();
 
-      Console.WriteLine("PeriodicJobTest.Test, Press a key to exit...");
-      KeyPressed().Wait();
+      Console.WriteLine("PeriodicJobTest.Test, Press Escape to exit...");
+      keyPressTask.Wait();
     }
 
     private void HandleHttpGetCompleted(object sender, HttpGetCompletedEventArgs eventArgs)
@@ -40,21 +41,6 @@ namespace AsyncTests.PeriodicJob
 
       Console.WriteLine("Finish handling HttpGetCompleted event...");
       Console.ReadLine();
-    }
-
-    private async Task KeyPressed()
-    {
-      await Task.Yield();
-
-      while (true)
-      {
-        if (Console.KeyAvailable)
-        {
-          Console.ReadKey(true);
-          break;
-        }
-        await Task.Delay(125);
-      }
     }
   }
 }

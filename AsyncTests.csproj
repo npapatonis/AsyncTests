@@ -55,6 +55,7 @@
     <Compile Include="CancellationHandling\CancellationHandling.cs" />
     <Compile Include="CancellationHandling\CancellationHandlingTest.cs" />
     <Compile Include="Common\JobResult.cs" />
+    <Compile Include="Common\KeyPress.cs" />
     <Compile Include="Common\Logger.cs" />
     <Compile Include="Common\JobDirectorBase.cs" />
     <Compile Include="EventHub\EventHub.cs" />

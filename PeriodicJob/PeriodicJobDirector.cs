@@ -38,29 +38,19 @@ namespace Tks.G1Track.Mobile.Shared.Common
       {
         Logger.Verbose("Task.Run starting");
 
-        var sleepExecContext = new TaskExecContext(async () =>
-        {
-          Logger.Verbose("Before sleep");
-          await Task.Delay(PeriodicJob.SleepInterval, cancellationToken).ConfigureAwait(false);
-          Logger.Verbose("After sleep");
-        },
-        this,
-        Logger);
-
-        var jobExecContext = new TaskExecContext<JobResult>(async () =>
-        {
-          Logger.Verbose("Before PeriodicJob.Run()");
-          var result = await PeriodicJob.Run(JobExceptionState, Logger, cancellationToken).ConfigureAwait(false);
-          JobExceptionState.Clear();
-          Logger.Verbose("After backgroundTask.Run()");
-          return result;
-        },
-        this,
-        Logger);
-
         while (!cancellationToken.IsCancellationRequested)
         {
-          var jobResult = await jobExecContext.ExecAsync(JobExceptionState).ConfigureAwait(false);
+          var jobResult = await TaskExecContext.ExecAsync(async () =>
+          {
+            Logger.Verbose("Before PeriodicJob.Run()");
+            var result = await PeriodicJob.Run(JobExceptionState, Logger, cancellationToken).ConfigureAwait(false);
+            JobExceptionState.Clear();
+            Logger.Verbose("After backgroundTask.Run()");
+            return result;
+          },
+          JobExceptionState,
+          this,
+          Logger).ConfigureAwait(false);
           if (ShouldStop(cancellationToken, jobResult)) break;
 
           // Now let it handle any exception that occurred
@@ -69,7 +59,15 @@ namespace Tks.G1Track.Mobile.Shared.Common
             if (!PeriodicJob.HandleException(JobExceptionState, Logger)) break;
           }
 
-          await sleepExecContext.ExecAsync(Common.JobExceptionState.None).ConfigureAwait(false);
+          await TaskExecContext.ExecAsync(async () =>
+          {
+            Logger.Verbose("Before sleep");
+            await Task.Delay(PeriodicJob.SleepInterval, cancellationToken).ConfigureAwait(false);
+            Logger.Verbose("After sleep");
+          },
+          Common.JobExceptionState.None,
+          this,
+          Logger).ConfigureAwait(false);
 
           //// Let the job run
           //var jobResult = await DoAsyncOperation(JobExceptionState, async () =>

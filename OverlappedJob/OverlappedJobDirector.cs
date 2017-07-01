@@ -50,22 +50,16 @@ namespace Tks.G1Track.Mobile.Shared.Common
         while (!cancellationToken.IsCancellationRequested)
         {
           // Wait for consumer first since it regulates the overall data flow
-          //bool consumerContinue = await TryOperationAsync(ConsumerExceptionState, async () =>
-          //{
-          //  Logger.Verbose("Before awaiting consumer task");
-          //  var result = await consumerTask;
-          //  Logger.Verbose("After awaiting consumer task");
-          //  return result;
-          //}).ConfigureAwait(false);
-          //if (cancellationToken.IsCancellationRequested) break;
-
-          bool consumerContinue = await new TaskExecContext<bool>(async () =>
+          bool consumerContinue = await TaskExecContext.ExecAsync(async () =>
           {
             Logger.Verbose("Before awaiting consumer task");
             var result = await consumerTask;
             Logger.Verbose("After awaiting consumer task");
             return result;
-          }, this, Logger).ExecAsync(ConsumerExceptionState).ConfigureAwait(false);
+          },
+          ConsumerExceptionState,
+          this,
+          Logger).ConfigureAwait(false);
           if (cancellationToken.IsCancellationRequested) break;
 
           // Did the producer signal end of data during the last iteration?
@@ -77,23 +71,16 @@ namespace Tks.G1Track.Mobile.Shared.Common
           if (!consumerContinue) Cancel();
 
           // Wait for producer
-          //var producerResult = await TryOperationAsync(ProducerExceptionState, async () =>
-          //{
-          //  Logger.Verbose("Before awaiting producer task");
-          //  var result = await producerTask;
-          //  Logger.Verbose("After awaiting producer task");
-          //  return result;
-          //}).ConfigureAwait(false);
-          //if (cancellationToken.IsCancellationRequested) break;
-
-          var producerResult = await new TaskExecContext<ProducerResult<TData>>(async () =>
+          var producerResult = await TaskExecContext.ExecAsync(async () =>
           {
             Logger.Verbose("Before awaiting producer task");
             var result = await producerTask;
             Logger.Verbose("After awaiting producer task");
             return result;
-          }, this, Logger).ExecAsync(ProducerExceptionState).ConfigureAwait(false);
-          if (cancellationToken.IsCancellationRequested) break;
+          },
+          ProducerExceptionState,
+          this,
+          Logger).ConfigureAwait(false);
 
           // If producer has more data, run it again
           Logger.Verbose($"Testing producerResult.Continue flag: {producerResult.Continue}");

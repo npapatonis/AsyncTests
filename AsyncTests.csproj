@@ -48,7 +48,6 @@
     <Compile Include="ApplyFilter\ApplyFilterTest.cs" />
     <Compile Include="AsyncEvents\AsyncEvents.cs" />
     <Compile Include="AsyncEvents\AsyncEventsTest.cs" />
-    <Compile Include="Common\IDirectableJob.cs" />
     <Compile Include="Common\JobExceptionState.cs" />
     <Compile Include="Common\Extensions.cs" />
     <Compile Include="Common\ILogger.cs" />
@@ -58,6 +57,7 @@
     <Compile Include="Common\KeyPress.cs" />
     <Compile Include="Common\Logger.cs" />
     <Compile Include="Common\JobDirectorBase.cs" />
+    <Compile Include="Common\TaskExecContext.cs" />
     <Compile Include="EventHub\EventHub.cs" />
     <Compile Include="MiscTests\LockvsSemaphoreTest.cs" />
     <Compile Include="OverlappedJob\OverlappedJobTest.cs" />

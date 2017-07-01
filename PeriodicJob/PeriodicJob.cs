@@ -22,7 +22,8 @@ namespace AsyncTests.PeriodicJob
   {
     public event EventHandler<HttpGetCompletedEventArgs> HttpGetCompleted;
 
-    public TimeSpan SleepInterval => TimeSpan.FromMilliseconds(3000);
+    private TimeSpan m_sleepInterval = TimeSpan.FromMilliseconds(5000);
+    public TimeSpan SleepInterval => m_sleepInterval;
 
     public bool HandleException(IJobExceptionState jobExceptionState, ILogger logger)
     {
@@ -32,6 +33,7 @@ namespace AsyncTests.PeriodicJob
         return false;
       }
 
+      m_sleepInterval = m_sleepInterval.Subtract(TimeSpan.FromMilliseconds(2000));
       return true;
     }
 

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Tks.G1Track.Mobile.Shared.Common
 {
-  internal class OverlappedJobDirector<TData> : JobDirectorBase
+  internal class OverlappedJobDirector<TData> : JobDirectorBase, ICancellationSource
   {
     #region =====[ ctor ]==========================================================================================
 
@@ -30,6 +30,12 @@ namespace Tks.G1Track.Mobile.Shared.Common
 
     #endregion
 
+    #region =====[ ICancellationSource ]=============================================================================
+
+    public bool IsCancellationRequested => CancellationTokenSource.IsCancellationRequested;
+
+    #endregion
+
     #region =====[ Protected Methods ]===============================================================================
 
     protected override Task InternalStartAsync(CancellationToken cancellationToken)
@@ -44,13 +50,22 @@ namespace Tks.G1Track.Mobile.Shared.Common
         while (!cancellationToken.IsCancellationRequested)
         {
           // Wait for consumer first since it regulates the overall data flow
-          bool consumerContinue = await TryOperationAsync(ConsumerExceptionState, async () =>
+          //bool consumerContinue = await TryOperationAsync(ConsumerExceptionState, async () =>
+          //{
+          //  Logger.Verbose("Before awaiting consumer task");
+          //  var result = await consumerTask;
+          //  Logger.Verbose("After awaiting consumer task");
+          //  return result;
+          //}).ConfigureAwait(false);
+          //if (cancellationToken.IsCancellationRequested) break;
+
+          bool consumerContinue = await new TaskExecContext<bool>(async () =>
           {
             Logger.Verbose("Before awaiting consumer task");
             var result = await consumerTask;
             Logger.Verbose("After awaiting consumer task");
             return result;
-          }).ConfigureAwait(false);
+          }, this, Logger).ExecAsync(ConsumerExceptionState).ConfigureAwait(false);
           if (cancellationToken.IsCancellationRequested) break;
 
           // Did the producer signal end of data during the last iteration?
@@ -62,13 +77,22 @@ namespace Tks.G1Track.Mobile.Shared.Common
           if (!consumerContinue) Cancel();
 
           // Wait for producer
-          var producerResult = await TryOperationAsync(ProducerExceptionState, async () =>
+          //var producerResult = await TryOperationAsync(ProducerExceptionState, async () =>
+          //{
+          //  Logger.Verbose("Before awaiting producer task");
+          //  var result = await producerTask;
+          //  Logger.Verbose("After awaiting producer task");
+          //  return result;
+          //}).ConfigureAwait(false);
+          //if (cancellationToken.IsCancellationRequested) break;
+
+          var producerResult = await new TaskExecContext<ProducerResult<TData>>(async () =>
           {
             Logger.Verbose("Before awaiting producer task");
             var result = await producerTask;
             Logger.Verbose("After awaiting producer task");
             return result;
-          }).ConfigureAwait(false);
+          }, this, Logger).ExecAsync(ProducerExceptionState).ConfigureAwait(false);
           if (cancellationToken.IsCancellationRequested) break;
 
           // If producer has more data, run it again

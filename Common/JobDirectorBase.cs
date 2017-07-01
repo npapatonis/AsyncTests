@@ -23,13 +23,13 @@ namespace Tks.G1Track.Mobile.Shared.Common
 
     #region =====[ Private Properties ]============================================================================
 
-    private CancellationTokenSource CancellationTokenSource { get; set; }
     private Task Task { get; set; }
 
     #endregion
 
     #region =====[ Protected Properties ]============================================================================
 
+    protected CancellationTokenSource CancellationTokenSource { get; set; }
     protected ILogger Logger { get; set; }
 
     #endregion
@@ -65,27 +65,27 @@ namespace Tks.G1Track.Mobile.Shared.Common
 
     protected abstract Task InternalStartAsync(CancellationToken cancellationToken);
 
-    protected async Task<JobResult> RunJobAsync(
-      IDirectableJob job,
-      IJobExceptionState jobExceptionState,
-      CancellationToken cancellationToken)
-    {
-      var jobResult = await TryOperationAsync(jobExceptionState, async () =>
-      {
-        var result = await job.Run(jobExceptionState, Logger, cancellationToken).ConfigureAwait(false);
-        jobExceptionState.Clear();
-        return result;
-      }).ConfigureAwait(false);
-      if (ShouldStop(cancellationToken, jobResult)) return JobResult.FalseResult;
+    //protected async Task<JobResult> RunJobAsync(
+    //  IDirectableJob job,
+    //  IJobExceptionState jobExceptionState,
+    //  CancellationToken cancellationToken)
+    //{
+    //  var jobResult = await TryOperationAsync(jobExceptionState, async () =>
+    //  {
+    //    var result = await job.Run(jobExceptionState, Logger, cancellationToken).ConfigureAwait(false);
+    //    jobExceptionState.Clear();
+    //    return result;
+    //  }).ConfigureAwait(false);
+    //  if (ShouldStop(cancellationToken, jobResult)) return JobResult.FalseResult;
 
-      // Now let it handle any exception that occurred
-      if (jobExceptionState.LastException != null)
-      {
-        if (!job.HandleException(jobExceptionState, Logger)) return JobResult.FalseResult;
-      }
+    //  // Now let it handle any exception that occurred
+    //  if (jobExceptionState.LastException != null)
+    //  {
+    //    if (!job.HandleException(jobExceptionState, Logger)) return JobResult.FalseResult;
+    //  }
 
-      return jobResult ?? JobResult.TrueResult;
-    }
+    //  return jobResult ?? JobResult.TrueResult;
+    //}
 
     protected bool ShouldStop(CancellationToken cancellationToken, JobResult jobResult = null)
     {
@@ -94,92 +94,92 @@ namespace Tks.G1Track.Mobile.Shared.Common
       return false;
     }
 
-    protected async Task TryOperationAsync(IJobExceptionState jobExceptionState, Func<Task> operation)
-    {
-      await TryOperationAsync(jobExceptionState, async () =>
-      {
-        await operation().ConfigureAwait(false);
-        return 0;
-      }).ConfigureAwait(false);
-    }
+    //protected async Task TryOperationAsync(IJobExceptionState jobExceptionState, Func<Task> operation)
+    //{
+    //  await TryOperationAsync(jobExceptionState, async () =>
+    //  {
+    //    await operation().ConfigureAwait(false);
+    //    return 0;
+    //  }).ConfigureAwait(false);
+    //}
 
-    protected async Task<TReturn> TryOperationAsync<TReturn>(
-      IJobExceptionState jobExceptionState,
-      Func<Task<TReturn>> operation)
-    {
-      try
-      {
-        Logger.Verbose("Before try operation");
-        var result = await operation().ConfigureAwait(false);
-        Logger.Verbose("After try operation");
-        return result;
-      }
-      catch (OperationCanceledException operationCanceledException)
-      {
-        Logger.Verbose("Caught OperationCanceledException");
-        if (!CancellationTokenSource.IsCancellationRequested)
-        {
-          Logger.Verbose("Before log OperationCanceledException");
-          HandleException(jobExceptionState, operationCanceledException, Logger.Warning);
-          Logger.Verbose("After log OperationCanceledException");
-        }
-      }
-      catch (AggregateException aggregateException)
-      {
-        Logger.Verbose("Caught AggregateException");
-        aggregateException.Handle((e) =>
-        {
-          if (e is OperationCanceledException)
-          {
-            if (!CancellationTokenSource.IsCancellationRequested)
-            {
-              Logger.Verbose("Before log aggregate's OperationCanceledException");
-              HandleException(jobExceptionState, e, Logger.Warning);
-              Logger.Verbose("After log aggregate's OperationCanceledException");
-            }
-            return true;
-          }
+    //protected async Task<TReturn> TryOperationAsync<TReturn>(
+    //  IJobExceptionState jobExceptionState,
+    //  Func<Task<TReturn>> operation)
+    //{
+    //  try
+    //  {
+    //    Logger.Verbose("Before try operation");
+    //    var result = await operation().ConfigureAwait(false);
+    //    Logger.Verbose("After try operation");
+    //    return result;
+    //  }
+    //  catch (OperationCanceledException operationCanceledException)
+    //  {
+    //    Logger.Verbose("Caught OperationCanceledException");
+    //    if (!CancellationTokenSource.IsCancellationRequested)
+    //    {
+    //      Logger.Verbose("Before log OperationCanceledException");
+    //      HandleException(jobExceptionState, operationCanceledException, Logger.Warning);
+    //      Logger.Verbose("After log OperationCanceledException");
+    //    }
+    //  }
+    //  catch (AggregateException aggregateException)
+    //  {
+    //    Logger.Verbose("Caught AggregateException");
+    //    aggregateException.Handle((e) =>
+    //    {
+    //      if (e is OperationCanceledException)
+    //      {
+    //        if (!CancellationTokenSource.IsCancellationRequested)
+    //        {
+    //          Logger.Verbose("Before log aggregate's OperationCanceledException");
+    //          HandleException(jobExceptionState, e, Logger.Warning);
+    //          Logger.Verbose("After log aggregate's OperationCanceledException");
+    //        }
+    //        return true;
+    //      }
 
-          Logger.Verbose("Before log aggregate's other inner exception");
-          HandleException(jobExceptionState, e, Logger.Error);
-          Logger.Verbose("After log aggregate's other inner exception");
-          return false;
-        });
-      }
-      catch (Exception exception)
-      {
-        Logger.Verbose("Before log Exception");
-        HandleException(jobExceptionState, exception, Logger.Error);
-        Logger.Verbose("After log Exception");
-      }
+    //      Logger.Verbose("Before log aggregate's other inner exception");
+    //      HandleException(jobExceptionState, e, Logger.Error);
+    //      Logger.Verbose("After log aggregate's other inner exception");
+    //      return false;
+    //    });
+    //  }
+    //  catch (Exception exception)
+    //  {
+    //    Logger.Verbose("Before log Exception");
+    //    HandleException(jobExceptionState, exception, Logger.Error);
+    //    Logger.Verbose("After log Exception");
+    //  }
 
-      return default(TReturn);
-    }
+    //  return default(TReturn);
+    //}
 
     #endregion
 
     #region =====[ Private Methods ]=================================================================================
 
-    private void HandleException(IJobExceptionState jobExceptionState, Exception exception, Action<string> logAction)
-    {
-      // If no jobExceptionState, ignore this operation's exception
-      if (jobExceptionState == JobExceptionState.None) return;
+    //private void HandleException(IJobExceptionState jobExceptionState, Exception exception, Action<string> logAction)
+    //{
+    //  // If no jobExceptionState, ignore this operation's exception
+    //  if (jobExceptionState == JobExceptionState.None) return;
 
-      jobExceptionState.LastException = exception;
-      jobExceptionState.ExceptionCount++;
+    //  jobExceptionState.LastException = exception;
+    //  jobExceptionState.ExceptionCount++;
 
-      string message = exception.ExpandMessage();
-      if (message != jobExceptionState.LastExceptionMessage)
-      {
-        jobExceptionState.LastExceptionCount = 1;
-        jobExceptionState.LastExceptionMessage = message;
-        logAction(message);
-      }
-      else
-      {
-        jobExceptionState.LastExceptionCount++;
-      }
-    }
+    //  string message = exception.ExpandMessage();
+    //  if (message != jobExceptionState.LastExceptionMessage)
+    //  {
+    //    jobExceptionState.LastExceptionCount = 1;
+    //    jobExceptionState.LastExceptionMessage = message;
+    //    logAction(message);
+    //  }
+    //  else
+    //  {
+    //    jobExceptionState.LastExceptionCount++;
+    //  }
+    //}
 
     #endregion
   }

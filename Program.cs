@@ -9,11 +9,11 @@ namespace AsyncTests
     {
       //new AsyncEventsTest().Test();
       //new CancellationHandlingTest().Test();
-      //new PeriodicJobTest().Test();
+      new PeriodicJobTest().Test();
       //new ApplyFilterTest().Test();
       //new LockvsSemaphoreTest().Test(false).Wait();
 
-      new OverlappedJobTest().Test();
+      //new OverlappedJobTest().Test();
     }
   }
 }

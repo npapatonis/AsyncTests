@@ -13,7 +13,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
 
   public class JobExceptionState : IJobExceptionState
   {
-    #region =====[ Public Properties ]=============================================================================
+    #region =====[ IJobExceptionState ]============================================================================
 
     public Exception LastException { get; set; }
     public string LastExceptionMessage { get; set; }

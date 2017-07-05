@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 namespace Tks.G1Track.Mobile.Shared.Common
@@ -40,6 +39,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
 
         while (!cancellationToken.IsCancellationRequested)
         {
+          // Let the task run
           var jobResult = await TaskExecContext.ExecAsync(async () =>
           {
             Logger.Verbose("Before PeriodicJob.Run()");
@@ -51,6 +51,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
           JobExceptionState,
           this,
           Logger).ConfigureAwait(false);
+
           if (ShouldStop(cancellationToken, jobResult)) break;
 
           // Now let it handle any exception that occurred
@@ -68,31 +69,6 @@ namespace Tks.G1Track.Mobile.Shared.Common
           Common.JobExceptionState.None,
           this,
           Logger).ConfigureAwait(false);
-
-          //// Let the job run
-          //var jobResult = await DoAsyncOperation(JobExceptionState, async () =>
-          //{
-          //  Logger.Verbose("Before backgroundTask.Run()");
-          //  var result = await PeriodicJob.Run(JobExceptionState, Logger, cancellationToken).ConfigureAwait(false);
-          //  JobExceptionState.Clear();
-          //  Logger.Verbose("After backgroundTask.Run()");
-          //  return result;
-          //}).ConfigureAwait(false);
-          //if (ShouldStop(cancellationToken, jobResult)) break;
-
-          //// Now let it handle any exception that occurred
-          //if (JobExceptionState.LastException != null)
-          //{
-          //  if (!PeriodicJob.HandleException(JobExceptionState, Logger)) break;
-          //}
-
-          // Sleep if necessary before running again
-          //await TryOperationAsync(Common.JobExceptionState.None, async () =>
-          //{
-          //  Logger.Verbose("Before sleep");
-          //  await Task.Delay(PeriodicJob.SleepInterval, cancellationToken).ConfigureAwait(false);
-          //  Logger.Verbose("After sleep");
-          //}).ConfigureAwait(false);
         }
       }, cancellationToken);
     }

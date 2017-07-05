@@ -4,36 +4,31 @@ using System.Threading;
 using System.Threading.Tasks;
 using Tks.G1Track.Mobile.Shared.Common;
 
-namespace AsyncTests.PeriodicJob
+namespace AsyncTests.TriggeredJob
 {
-  internal class HttpGetCompletedEventArgs : EventArgs
+  internal class TriggeredJob : ITriggeredJob
   {
-    internal HttpGetCompletedEventArgs(HttpResponseMessage httpResponseMessage, CancellationToken cancellationToken)
+    AsyncManualResetEvent m_mre = new AsyncManualResetEvent(false);
+
+    internal TriggeredJob(TriggeredJobTest triggeredJobTest)
     {
-      HttpResponseMessage = httpResponseMessage;
-      CancellationToken = cancellationToken;
+      triggeredJobTest.JobTriggered += HandleJobTriggered;
     }
 
-    internal HttpResponseMessage HttpResponseMessage { get; private set; }
-    internal CancellationToken CancellationToken { get; private set; }
-  }
+    private void HandleJobTriggered(object sender, EventArgs e)
+    {
+      m_mre.Set();
+    }
 
-  internal class PeriodicJob : IPeriodicJob
-  {
-    public event EventHandler<HttpGetCompletedEventArgs> HttpGetCompleted;
-
-    private TimeSpan m_sleepInterval = TimeSpan.FromMilliseconds(5000);
-    public TimeSpan SleepInterval => m_sleepInterval;
+    public Task[] GetTriggers(CancellationToken cancellationToken)
+    {
+      return new Task[] { m_mre.WaitAsync(cancellationToken), Task.Delay(3000, cancellationToken) };
+      //return new Task[] { m_mre.WaitAsync(cancellationToken) };
+    }
 
     public bool HandleException(IJobExceptionState jobExceptionState, ILogger logger)
     {
-      if (jobExceptionState.LastExceptionCount == 3)
-      {
-        logger.Warning("Handling exception that has occurred too many times");
-        return false;
-      }
-
-      m_sleepInterval = m_sleepInterval.Subtract(TimeSpan.FromMilliseconds(2000));
+      m_mre.Reset();
       return true;
     }
 
@@ -51,9 +46,12 @@ namespace AsyncTests.PeriodicJob
       //await Task.WhenAny(task, Task.CompletedTask);
       //var response = task.Result;
 
-      //httpClient.Timeout = TimeSpan.FromMilliseconds(10);
+      httpClient.Timeout = TimeSpan.FromMilliseconds(10);
       var response = await httpClient.GetAsync("http://www.google.com", cancellationToken);
-      HttpGetCompleted?.Invoke(this, new HttpGetCompletedEventArgs(response, cancellationToken));
+      //HttpGetCompleted?.Invoke(this, new HttpGetCompletedEventArgs(response, cancellationToken));
+
+      logger.Information("Resetting MRE");
+      m_mre.Reset();
 
       return JobResult.TrueResult;
     }

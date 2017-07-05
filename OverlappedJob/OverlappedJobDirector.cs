@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Tks.G1Track.Mobile.Shared.Common
 {
-  internal class OverlappedJobDirector<TData> : JobDirectorBase, ICancellationSource
+  internal class OverlappedJobDirector<TData> : JobDirectorBase
   {
     #region =====[ ctor ]==========================================================================================
 
@@ -27,12 +27,6 @@ namespace Tks.G1Track.Mobile.Shared.Common
     private IOverlappedConsumer<TData> Consumer { get; set; }
     private IJobExceptionState ProducerExceptionState { get; set; }
     private IJobExceptionState ConsumerExceptionState { get; set; }
-
-    #endregion
-
-    #region =====[ ICancellationSource ]=============================================================================
-
-    public bool IsCancellationRequested => CancellationTokenSource.IsCancellationRequested;
 
     #endregion
 

@@ -3,14 +3,14 @@ using System.Threading.Tasks;
 
 namespace Tks.G1Track.Mobile.Shared.Common
 {
-  public class PeriodicJobDirector : JobDirectorBase
+  public class TriggeredJobDirector : JobDirectorBase
   {
     #region =====[ ctor ]==========================================================================================
 
-    public PeriodicJobDirector(IPeriodicJob periodicJob, ILogger logger)
+    public TriggeredJobDirector(ITriggeredJob triggeredJob, ILogger logger)
       : base(logger)
     {
-      PeriodicJob = periodicJob;
+      TriggeredJob = triggeredJob;
       JobExceptionState = new JobExceptionState();
     }
 
@@ -18,7 +18,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
 
     #region =====[ Private Properties ]============================================================================
 
-    private IPeriodicJob PeriodicJob { get; set; }
+    private ITriggeredJob TriggeredJob { get; set; }
     private IJobExceptionState JobExceptionState { get; set; }
 
     #endregion
@@ -36,10 +36,10 @@ namespace Tks.G1Track.Mobile.Shared.Common
           // Let the task run
           var jobResult = await TaskExecContext.ExecAsync(async () =>
           {
-            Logger.Verbose("Before PeriodicJob.Run()");
-            var result = await PeriodicJob.Run(JobExceptionState, Logger, cancellationToken).ConfigureAwait(false);
+            Logger.Verbose("Before TriggeredJob.Run()");
+            var result = await TriggeredJob.Run(JobExceptionState, Logger, cancellationToken).ConfigureAwait(false);
             JobExceptionState.Clear();
-            Logger.Verbose("After PeriodicJob.Run()");
+            Logger.Verbose("After TriggeredJob.Run()");
             return result;
           },
           JobExceptionState,
@@ -51,14 +51,15 @@ namespace Tks.G1Track.Mobile.Shared.Common
           // Now let it handle any exception that occurred
           if (JobExceptionState.LastException != null)
           {
-            if (!PeriodicJob.HandleException(JobExceptionState, Logger)) break;
+            if (!TriggeredJob.HandleException(JobExceptionState, Logger)) break;
           }
 
+          // Wait for a trigger to resume
           await TaskExecContext.ExecAsync(async () =>
           {
-            Logger.Verbose("Before sleep");
-            await Task.Delay(PeriodicJob.SleepInterval, cancellationToken).ConfigureAwait(false);
-            Logger.Verbose("After sleep");
+            Logger.Verbose("Before WhenAny(triggers)");
+            await await Task.WhenAny(TriggeredJob.GetTriggers(cancellationToken)).ConfigureAwait(false);
+            Logger.Verbose("After WhenAny(triggers)");
           },
           Common.JobExceptionState.None,
           this,

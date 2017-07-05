@@ -66,6 +66,7 @@
     <Compile Include="PeriodicJob\PeriodicJob.cs" />
     <Compile Include="PeriodicJob\PeriodicJobDirector.cs" />
     <Compile Include="PeriodicJob\PeriodicJobTest.cs" />
+    <Compile Include="TriggeredJob\TriggeredJobDirector.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="OverlappedJob\IOverlappedProducer.cs" />
@@ -73,6 +74,12 @@
     <Compile Include="OverlappedJob\OverlappedJobDirector.cs" />
     <Compile Include="OverlappedJob\TestProducer.cs" />
     <Compile Include="OverlappedJob\TestConsumer.cs" />
+    <Compile Include="TaskHelpers\AsyncManualResetEvent.cs" />
+    <Compile Include="TaskHelpers\CancellationTokenTaskSource.cs" />
+    <Compile Include="TaskHelpers\TaskExtensions.cs" />
+    <Compile Include="TriggeredJob\TriggeredJob.cs" />
+    <Compile Include="TriggeredJob\ITriggeredJob.cs" />
+    <Compile Include="TriggeredJob\TriggeredJobTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

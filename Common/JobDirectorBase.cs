@@ -9,7 +9,7 @@ namespace Tks.G1Track.Mobile.Shared.Common
     Task StopAsync();
   }
 
-  public abstract class JobDirectorBase : IJobDirector
+  public abstract class JobDirectorBase : IJobDirector, ICancellationSource
   {
     #region =====[ ctor ]==========================================================================================
 
@@ -23,12 +23,12 @@ namespace Tks.G1Track.Mobile.Shared.Common
     #region =====[ Private Properties ]============================================================================
 
     private Task Task { get; set; }
+    private CancellationTokenSource CancellationTokenSource { get; set; }
 
     #endregion
 
     #region =====[ Protected Properties ]============================================================================
 
-    protected CancellationTokenSource CancellationTokenSource { get; set; }
     protected ILogger Logger { get; set; }
 
     #endregion
@@ -52,6 +52,12 @@ namespace Tks.G1Track.Mobile.Shared.Common
       await Task;
       Logger.Verbose("After awaiting Task");
     }
+
+    #endregion
+
+    #region =====[ ICancellationSource ]=============================================================================
+
+    public bool IsCancellationRequested => CancellationTokenSource.IsCancellationRequested;
 
     #endregion
 

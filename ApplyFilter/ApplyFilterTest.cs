@@ -10,14 +10,14 @@ namespace AsyncTests.ApplyFilter
     private ILogger Logger = new Logger();
     private string SearchFilter = "";
 
-    private ApplyFilterSignal ApplyFilterSignal;
+    private CountedSignal CountedSignal;
 
     private Task BackgroundFilterTask = null;
 
     internal void Test()
     {
       CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-      ApplyFilterSignal = new ApplyFilterSignal(Logger);
+      CountedSignal = new CountedSignal(Logger);
 
       RunBackgroundFilter(cancellationTokenSource.Token);
 
@@ -40,7 +40,7 @@ namespace AsyncTests.ApplyFilter
     public void ApplyFilter(string searchFilter)
     {
       Logger.Information($"ApplyFilter('{searchFilter}') - Setting ApplyFilterSignal");
-      ApplyFilterSignal.Set();
+      CountedSignal.Set();
     }
 
     public void RunBackgroundFilter(CancellationToken cancellationToken)
@@ -53,19 +53,21 @@ namespace AsyncTests.ApplyFilter
 
           while (!cancellationToken.IsCancellationRequested)
           {
-            Logger.Information($"RunBackgroundFilter - Awaiting {nameof(ApplyFilterSignal)}");
-            await ApplyFilterSignal.WaitAsync(cancellationToken).ConfigureAwait(false);
+            Logger.Information($"RunBackgroundFilter - Awaiting {nameof(CountedSignal)}");
+            await CountedSignal.WaitAsync(cancellationToken).ConfigureAwait(false);
 
             while (true)
             {
               var searchFilter = SearchFilter;
               Logger.Information($"RunBackgroundFilter('{searchFilter}') - Copied SearchFilter");
 
+              var setCount = CountedSignal.SetCount;
+
               if (string.IsNullOrWhiteSpace(searchFilter))
               {
                 Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/o filter) Assign List");
                 //FilteredInmates = Inmates;
-                break;
+                if (CountedSignal.Clear(setCount)) break;
               }
               else
               {
@@ -83,16 +85,18 @@ namespace AsyncTests.ApplyFilter
                 Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) Cancellation Requested: {cancellationToken.IsCancellationRequested}");
                 if (cancellationToken.IsCancellationRequested) break;
 
-                if (searchFilter == SearchFilter)
+                if (setCount == CountedSignal.SetCount)
                 {
-                  // !!TODO!! Small timing window here.  If a user presses a key after this comparison and before the
-                  // signal is recreated, the signal will be lost.
-                  Logger.Information($"RunBackgroundFilter - Clearing ApplyFilterSignal");
-                  ApplyFilterSignal.Clear();
-
                   Logger.Information($"RunBackgroundFilter('{searchFilter}') - (w/ filter) Filter unchanged, assign List");
                   //FilteredInmates = new MvxObservableCollection<InmateViewModel>(tempList);
-                  break;
+
+                  // !!TODO!! Small timing window here.  If a user presses a key after this comparison and before the
+                  // signal is recreated, the signal will be lost.
+                  Logger.Information($"RunBackgroundFilter - TIMING WINDOW!!");
+                  await Task.Delay(2000, cancellationToken);
+
+                  Logger.Information($"RunBackgroundFilter - Clearing ApplyFilterSignal");
+                  if (CountedSignal.Clear(setCount)) break;
                 }
                 else
                 {
